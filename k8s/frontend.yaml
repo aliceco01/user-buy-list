@@ -14,16 +14,22 @@ spec:
       labels:
         app: user-buy-frontend
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - name: user-buy-frontend
           image: ghcr.io/<owner>/<repo>/user-buy-frontend:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
           ports:
             - containerPort: 8080
-          env:
-            - name: PORT
-              value: "8080"
-            - name: API_BASE
-              value: "http://customer-facing"
+          envFrom:
+            - configMapRef:
+                name: user-buy-frontend-config
           livenessProbe:
             httpGet:
               path: /

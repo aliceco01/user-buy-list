@@ -14,20 +14,22 @@ spec:
       labels:
         app: customer-facing
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - name: customer-facing
           image: ghcr.io/<owner>/<repo>/customer-facing:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
           ports:
             - containerPort: 3000
-          env:
-            - name: PORT
-              value: "3000"
-            - name: KAFKA_BROKER
-              value: "kafka:9092"
-            - name: CUSTOMER_MANAGEMENT_URL
-              value: "http://customer-management:3001"
-            - name: PURCHASE_TOPIC
-              value: "purchases"
+          envFrom:
+            - configMapRef:
+                name: customer-facing-config
           livenessProbe:
             httpGet:
               path: /health

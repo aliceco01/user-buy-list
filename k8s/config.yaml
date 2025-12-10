@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: customer-facing-config
+data:
+  PORT: "3000"
+  KAFKA_BROKER: "kafka:9092"
+  CUSTOMER_MANAGEMENT_URL: "http://customer-management:3001"
+  PURCHASE_TOPIC: "purchases"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: customer-management-config
+data:
+  PORT: "3001"
+  KAFKA_BROKER: "kafka:9092"
+  PURCHASE_TOPIC: "purchases"
+  KAFKA_GROUP_ID: "purchase-group"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: customer-management-secret
+type: Opaque
+stringData:
+  MONGODB_URI: "mongodb://mongodb:27017/purchases"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-buy-frontend-config
+data:
+  PORT: "8080"
+  API_BASE: "http://customer-facing"
+

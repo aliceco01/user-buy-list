@@ -2,19 +2,20 @@
 
 A simple buy-list system where a customer-facing service publishes purchases to Kafka, a customer-management service consumes and stores them in MongoDB, and a lightweight frontend triggers buys and lists a user's purchases.
 
-## Components
-- `services/customer-facing`: Express API that exposes `POST /buy` and `GET /getAllUserBuys/:userid`, publishes purchases to Kafka.
-- `services/customer-management`: Express API that consumes Kafka messages, stores them in MongoDB, and exposes `GET /purchases/:userid`.
-- `frontend`: Static UI (served via a tiny Express app) with Buy and getAllUserBuys buttons.
-- `k8s`: Manifests for Kafka, MongoDB, both services, frontend, and HPAs (CPU/memory + Kafka lag as an external metric).
+## What’s inside
+- `services/customer-facing`: Express API exposing `POST /buy`, `GET /getAllUserBuys/:userid`, publishes to Kafka.
+- `services/customer-management`: Express API consuming Kafka, storing to MongoDB, exposing `GET /purchases/:userid`.
+- `frontend`: Static UI served by a tiny Express app; calls the customer-facing API.
+- `k8s`: Kafka, MongoDB, both services, frontend, HPAs (CPU/memory + Kafka lag), optional KEDA ScaledObject.
 - `ci`: GitHub Actions builds/tests TypeScript and pushes images to GHCR.
 
 ## Prerequisites
 - Kubernetes cluster + `kubectl`
 - Container registry (GHCR by default) and Docker/BuildKit to build/push images
-- (Optional) External metrics adapter for the Kafka consumer lag metric used by the customer-management HPA
+- Yarn v1 installed (`corepack enable && corepack prepare yarn@1.22.x --activate`) or install via your package manager; stick with Yarn to avoid lockfile churn
+- (Optional) External metrics adapter for Kafka consumer lag metric if you use the HPA’s External metric (or install KEDA and use the provided ScaledObject)
 
-## Build & Push Images (GHCR example)
+## Build & push images (GHCR example)
 ```bash
 REGISTRY=ghcr.io/<owner>/<repo>
 
@@ -42,8 +43,10 @@ docker push $REGISTRY/user-buy-frontend:latest
 ```
 
 ## Deploy to Kubernetes
-Apply infra first, then services and autoscaling:
+Apply config/infra, then services and autoscaling:
 ```bash
+kubectl apply -f k8s/config.yaml
+kubectl apply -f k8s/pdb.yaml
 kubectl apply -f k8s/kafka.yaml
 kubectl apply -f k8s/mongodb.yaml
 kubectl apply -f k8s/kafka-exporter.yaml   # exposes Kafka lag metrics
@@ -51,6 +54,7 @@ kubectl apply -f k8s/customer-managment.yaml
 kubectl apply -f k8s/customer-facing.yaml
 kubectl apply -f k8s/frontend.yaml
 kubectl apply -f k8s/autoscaling.yaml
+# Optional: kubectl apply -f k8s/keda-customer-management.yaml  # requires KEDA installed
 ``` 
 
 Port-forward to try the UI:
@@ -59,7 +63,13 @@ kubectl port-forward svc/user-buy-frontend 8080:80
 # Frontend calls the customer-facing service inside the cluster.
 ```
 
-### Environment Variables
+### Runtime configuration
+- ConfigMaps: `k8s/config.yaml` holds non-secret env for each component.
+- Secret: `customer-management-secret` holds `MONGODB_URI`.
+- Persistence: `k8s/mongodb.yaml` uses a PVC (`mongo-data-pvc`, 10Gi, RWO).
+- Resilience/Safety: `k8s/pdb.yaml` adds PodDisruptionBudgets; deployments run non-root with read-only root FS where possible.
+
+Environment variables (for reference):
 - Customer-facing: `PORT` (default 3000), `KAFKA_BROKER` (default `localhost:9092`), `CUSTOMER_MANAGEMENT_URL`, `PURCHASE_TOPIC` (default `purchases`)
 - Customer-management: `PORT` (3001), `KAFKA_BROKER`, `MONGODB_URI`, `PURCHASE_TOPIC`, `KAFKA_GROUP_ID`
 - Frontend: `PORT` (8080), `API_BASE` (base URL to customer-facing)
@@ -76,6 +86,18 @@ Kafka consumer lag is used as the scaling signal for customer-management. In a r
 - Customer-facing: `POST /buy`, `GET /getAllUserBuys/:userid`, `GET /health`
 - Customer-management: `GET /purchases/:userid`, `POST /purchases` (direct write, useful for tests), `GET /health`
 - Frontend: `GET /` UI; uses `/buy` and `/getAllUserBuys/:userid` calls to the customer-facing service
+
+If you prefer KEDA, a sample ScaledObject is in `k8s/keda-customer-management.yaml` (requires KEDA CRDs installed).
+
+### Observability (future)
+- Kafka lag metric is already exposed via `kafka-exporter`. Hook it into Prometheus/Prometheus Adapter (or KEDA) for production-grade scaling.
+- Add Prometheus/Grafana/Alertmanager to scrape service health endpoints and Kafka exporter if your cluster doesn’t already provide it.
+
+### Smoke test
+After port-forwarding the customer-facing service (or frontend), run:
+```bash
+API_BASE=http://localhost:3000 ./scripts/smoke.sh
+```
 
 ## CI/CD
 - `.github/workflows/ci.yaml` runs `yarn test` (TypeScript checks) and builds/pushes images for customer-facing, customer-management, and frontend to GHCR (`ghcr.io/<owner>/<repo>`).
