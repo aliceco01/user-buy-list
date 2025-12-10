@@ -88,7 +88,7 @@ async function startKafkaConsumer(): Promise<void> {
   }
 }
 
-// POST /purchases - direct write (useful for tests)
+// POST / write a new purchase
 app.post('/purchases', async (req: Request, res: Response) => {
   try {
     const { username, userid, price, timestamp } = req.body;
@@ -96,12 +96,12 @@ app.post('/purchases', async (req: Request, res: Response) => {
     if (!username || !userid || price === undefined) {
       return res.status(400).json({ error: 'Missing required fields: username, userid, price' });
     }
-
+// Validate price
     const parsedPrice = Number(price);
     if (Number.isNaN(parsedPrice) || parsedPrice <= 0) {
       return res.status(400).json({ error: 'Price must be a positive number' });
     }
-
+// Create and save purchase
     const purchase = new Purchase({
       username,
       userid,
@@ -145,13 +145,14 @@ app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', kafkaReady, mongoReady });
 });
 
-// Start server
+// Start server and initialize connections
 const server = app.listen(PORT, async () => {
   console.log(`Customer-management service running on port ${PORT}`);
   await connectMongo();
   await startKafkaConsumer();
 });
 
+// Graceful shutdown for Kafka and MongoDB connections
 process.on('SIGTERM', async () => {
   console.log('Shutting down customer-management service');
   await consumer.disconnect().catch(() => {});

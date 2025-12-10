@@ -1,3 +1,5 @@
+// handle customer purchases, send to Kafka, fetch from customer-management
+
 import axios from 'axios';
 import cors from 'cors';
 import express, { Request, Response } from 'express';
@@ -7,13 +9,13 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Config
+// kafka and service config 
 const PORT = Number(process.env.PORT) || 3000;
 const KAFKA_BROKER = process.env.KAFKA_BROKER || 'localhost:9092';
 const CUSTOMER_MANAGEMENT_URL = process.env.CUSTOMER_MANAGEMENT_URL || 'http://localhost:3001';
 const PURCHASE_TOPIC = process.env.PURCHASE_TOPIC || 'purchases';
 
-// Purchase interface
+// Purchase interface for sending to Kafka
 interface Purchase {
   username: string;
   userid: string;
@@ -21,7 +23,7 @@ interface Purchase {
   timestamp: string;
 }
 
-// Kafka producer setup
+// Kafka producer setup 
 const kafka = new Kafka({
   clientId: 'customer-facing',
   brokers: [KAFKA_BROKER]
@@ -56,13 +58,14 @@ app.post('/buy', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Price must be a positive number' });
     }
 
+    // Creation of  purchase object in Kafka message
     const purchase: Purchase = {
       username,
       userid,
       price: parsedPrice,
       timestamp: new Date().toISOString()
     };
-
+// Send purchase message to Kafka
     await producer.send({
       topic: PURCHASE_TOPIC,
       messages: [{ value: JSON.stringify(purchase) }]
@@ -87,7 +90,7 @@ app.get('/getAllUserBuys/:userid', async (req: Request, res: Response) => {
   }
 });
 
-// Health check
+// Health check endpoint for Kafka connection
 app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', kafkaReady });
 });

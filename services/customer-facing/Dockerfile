@@ -1,3 +1,5 @@
+## Dockerfile for customer-facing service
+
 FROM node:18-alpine
 
 WORKDIR /app
