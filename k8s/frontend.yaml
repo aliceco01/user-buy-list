@@ -19,6 +19,9 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
+      volumes:
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: user-buy-frontend
           image: ghcr.io/<owner>/<repo>/user-buy-frontend:latest
@@ -27,6 +30,9 @@ spec:
             readOnlyRootFilesystem: true
           ports:
             - containerPort: 8080
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           envFrom:
             - configMapRef:
                 name: user-buy-frontend-config

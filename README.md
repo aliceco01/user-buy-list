@@ -1,6 +1,7 @@
 # User Buy List
 
-A simple buy-list system where a customer-facing service publishes purchases to Kafka, a customer-management service consumes and stores them in MongoDB, and a lightweight frontend triggers buys and lists a user's purchases.
+A simple system for a user to buy random items and get a list of all the items that he bought
+
 
 ## What’s inside
 - `services/customer-facing`: Express API exposing `POST /buy`, `GET /getAllUserBuys/:userid`, publishes to Kafka.
