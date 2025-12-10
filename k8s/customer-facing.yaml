@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: customer-facing
-          image: customer-facing:latest
+          image: ghcr.io/<owner>/<repo>/customer-facing:latest
           ports:
             - containerPort: 3000
           env:
@@ -26,6 +26,18 @@ spec:
               value: "kafka:9092"
             - name: CUSTOMER_MANAGEMENT_URL
               value: "http://customer-management:3001"
+            - name: PURCHASE_TOPIC
+              value: "purchases"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
           resources:
             requests:
               cpu: "100m"
@@ -42,6 +54,5 @@ spec:
   selector:
     app: customer-facing
   ports:
-    - port: 3000
+    - port: 80
       targetPort: 3000
-  type: LoadBalancer

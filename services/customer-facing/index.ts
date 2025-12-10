@@ -27,7 +27,6 @@ const kafka = new Kafka({
   brokers: [KAFKA_BROKER]
 });
 const producer: Producer = kafka.producer();
-
 let kafkaReady = false;
 
 // Connect to Kafka with retry

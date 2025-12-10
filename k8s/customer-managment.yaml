@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: customer-management
-          image: customer-management:latest
+          image: ghcr.io/<owner>/<repo>/customer-management:latest
           ports:
             - containerPort: 3001
           env:
@@ -26,6 +26,20 @@ spec:
               value: "kafka:9092"
             - name: MONGODB_URI
               value: "mongodb://mongodb:27017/purchases"
+            - name: PURCHASE_TOPIC
+              value: "purchases"
+            - name: KAFKA_GROUP_ID
+              value: "purchase-group"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 5
           resources:
             requests:
               cpu: "100m"

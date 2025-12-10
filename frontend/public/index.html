@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Buy List</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>User Buy List</h1>
+      <p>Send purchases and fetch all of a user's buys.</p>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Buy</h2>
+        <form id="buy-form">
+          <label>
+            Username
+            <input type="text" id="username" placeholder="alice" required />
+          </label>
+          <label>
+            User ID
+            <input type="text" id="userid" placeholder="123" required />
+          </label>
+          <label>
+            Price
+            <input type="number" step="0.01" id="price" placeholder="9.99" required />
+          </label>
+          <button type="submit">Buy</button>
+        </form>
+        <div id="buy-status" class="status"></div>
+      </section>
+
+      <section class="card">
+        <h2>Get All User Buys</h2>
+        <div class="fetch-row">
+          <input type="text" id="fetch-userid" placeholder="123" />
+          <button id="fetch-btn">getAllUserBuys</button>
+        </div>
+        <div id="fetch-status" class="status"></div>
+        <div id="results" class="results"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-buy-frontend
+  labels:
+    app: user-buy-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-buy-frontend
+  template:
+    metadata:
+      labels:
+        app: user-buy-frontend
+    spec:
+      containers:
+        - name: user-buy-frontend
+          image: ghcr.io/<owner>/<repo>/user-buy-frontend:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: API_BASE
+              value: "http://customer-facing"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 3
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-buy-frontend
+spec:
+  selector:
+    app: user-buy-frontend
+  ports:
+    - port: 80
+      targetPort: 8080
