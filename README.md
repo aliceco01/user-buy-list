@@ -1,14 +1,16 @@
 # User Buy List
 
+A simple system for a user to buy random items and get a list of all the items that he bought
+
 
 ![Architecture diagram](assets/buylist.drawio.png)
 
 
 
-A simple system for a user to buy random items and get a list of all the items that he bought
 
 
-## What’s inside
+
+## Components
 - `services/customer-facing`: Express API exposing `POST /buy`, `GET /getAllUserBuys/:userid`, publishes to Kafka.
 - `services/customer-management`: Express API consuming Kafka, storing to MongoDB, exposing `GET /purchases/:userid`.
 - `frontend`: Static UI served by a tiny Express app; calls the customer-facing API.
@@ -61,13 +63,50 @@ kubectl apply -f k8s/customer-facing.yaml
 kubectl apply -f k8s/frontend.yaml
 kubectl apply -f k8s/autoscaling.yaml
 # Optional: kubectl apply -f k8s/keda-customer-management.yaml  # requires KEDA installed
-``` 
+```
 
-Port-forward to try the UI:
+Wait for all pods to be ready:
+```bash
+kubectl get pods
+# Wait until all pods show STATUS: Running
+```
+
+## Access the Application
+
+The frontend is accessible via one of the following methods:
+
+### Option 1: Port-Forwarding (Recommended for local testing)
+
+Port-forward the frontend service:
 ```bash
 kubectl port-forward svc/user-buy-frontend 8080:80
-# Frontend calls the customer-facing service inside the cluster.
 ```
+
+Then open your browser to: **http://localhost:8080**
+
+### Option 2: NodePort (Alternative access method)
+
+If you prefer direct access without port-forwarding, apply the NodePort service:
+```bash
+kubectl apply -f k8s/frontend-nodeport.yaml
+```
+
+Get the NodePort:
+```bash
+kubectl get svc user-buy-frontend-nodeport
+```
+
+Access via: **http://<node-ip>:<nodeport>** (replace `<node-ip>` with your cluster node IP and `<nodeport>` with the port shown)
+
+### Verify It Works
+
+Once accessible, you should see:
+1. **Buy form**: Enter username, userid, and price, then click "Buy" button
+   - Expected: Success message showing the purchase was recorded
+2. **Get All User Buys**: Enter a userid and click "getAllUserBuys" button
+   - Expected: List of all purchases for that user displayed below
+
+Both actions should work end-to-end: purchases are sent to Kafka, consumed by customer-management service, stored in MongoDB, and retrieved on demand.
 
 ### Runtime configuration
 - ConfigMaps: `k8s/config.yaml` holds non-secret env for each component.
@@ -78,7 +117,7 @@ kubectl port-forward svc/user-buy-frontend 8080:80
 Environment variables (for reference):
 - Customer-facing: `PORT` (default 3000), `KAFKA_BROKER` (default `localhost:9092`), `CUSTOMER_MANAGEMENT_URL`, `PURCHASE_TOPIC` (default `purchases`)
 - Customer-management: `PORT` (3001), `KAFKA_BROKER`, `MONGODB_URI`, `PURCHASE_TOPIC`, `KAFKA_GROUP_ID`
-- Frontend: `PORT` (8080), `API_BASE` (base URL to customer-facing)
+- Frontend: `PORT` (8080), `CUSTOMER_FACING_URL` (internal service URL for proxying API requests)
 
 ### Autoscaling
 - `k8s/autoscaling.yaml`:
@@ -106,4 +145,25 @@ API_BASE=http://localhost:3000 ./scripts/smoke.sh
 ```
 
 ## CI/CD
-- `.github/workflows/ci.yaml` runs `yarn test` (TypeScript checks) and builds/pushes images for customer-facing, customer-management, and frontend to GHCR (`ghcr.io/<owner>/<repo>`).
+
+GitHub Actions workflow (`.github/workflows/ci.yaml`) automatically:
+- Runs TypeScript type checking
+- Builds container images for all services
+- Pushes images to GitHub Container Registry
+
+## Troubleshooting
+
+### Pods not starting
+- Check pod logs: `kubectl logs <pod-name>`
+- Verify ConfigMaps/Secrets exist: `kubectl get configmaps,secrets`
+- Ensure PVC is bound: `kubectl get pvc`
+
+### Kafka connection issues
+- Verify Kafka pod is running: `kubectl get pods -l app=kafka`
+- Check service endpoints: `kubectl get endpoints kafka`
+
+### MongoDB connection issues
+- Verify MongoDB pod is running: `kubectl get pods -l app=mongodb`
+- Check MongoDB logs: `kubectl logs -l app=mongodb`
+
+
