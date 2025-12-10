@@ -1,3 +1,8 @@
+// read and write customer purchase data from MongoDB
+// consume purchase messages from Kafka
+// expose REST API for reading and writing purchase data
+// health check endpoint
+
 import express, { Request, Response } from 'express';
 import { Kafka, Consumer } from 'kafkajs';
 import mongoose, { Schema } from 'mongoose';
