@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-facing
+  labels:
+    app: customer-facing
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: customer-facing
+  template:
+    metadata:
+      labels:
+        app: customer-facing
+    spec:
+      containers:
+        - name: customer-facing
+          image: customer-facing:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+            - name: KAFKA_BROKER
+              value: "kafka:9092"
+            - name: CUSTOMER_MANAGEMENT_URL
+              value: "http://customer-management:3001"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-facing
+spec:
+  selector:
+    app: customer-facing
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: LoadBalancer

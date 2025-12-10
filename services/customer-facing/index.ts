@@ -1,14 +1,17 @@
+import axios from 'axios';
+import cors from 'cors';
 import express, { Request, Response } from 'express';
 import { Kafka, Producer } from 'kafkajs';
-import axios from 'axios';
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 // Config
-const PORT: number = Number(process.env.PORT) || 3000;
-const KAFKA_BROKER: string = process.env.KAFKA_BROKER || 'localhost:9092';
-const CUSTOMER_MANAGEMENT_URL: string = process.env.CUSTOMER_MANAGEMENT_URL || 'http://localhost:3001';
+const PORT = Number(process.env.PORT) || 3000;
+const KAFKA_BROKER = process.env.KAFKA_BROKER || 'localhost:9092';
+const CUSTOMER_MANAGEMENT_URL = process.env.CUSTOMER_MANAGEMENT_URL || 'http://localhost:3001';
+const PURCHASE_TOPIC = process.env.PURCHASE_TOPIC || 'purchases';
 
 // Purchase interface
 interface Purchase {
@@ -25,12 +28,16 @@ const kafka = new Kafka({
 });
 const producer: Producer = kafka.producer();
 
-// Connect to Kafka
+let kafkaReady = false;
+
+// Connect to Kafka with retry
 async function connectKafka(): Promise<void> {
   try {
     await producer.connect();
+    kafkaReady = true;
     console.log('Connected to Kafka');
   } catch (err) {
+    kafkaReady = false;
     console.error('Failed to connect to Kafka:', err);
     setTimeout(connectKafka, 5000);
   }
@@ -45,15 +52,20 @@ app.post('/buy', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Missing required fields: username, userid, price' });
     }
 
+    const parsedPrice = Number(price);
+    if (Number.isNaN(parsedPrice) || parsedPrice <= 0) {
+      return res.status(400).json({ error: 'Price must be a positive number' });
+    }
+
     const purchase: Purchase = {
       username,
       userid,
-      price,
+      price: parsedPrice,
       timestamp: new Date().toISOString()
     };
 
     await producer.send({
-      topic: 'purchases',
+      topic: PURCHASE_TOPIC,
       messages: [{ value: JSON.stringify(purchase) }]
     });
 
@@ -77,12 +89,18 @@ app.get('/getAllUserBuys/:userid', async (req: Request, res: Response) => {
 });
 
 // Health check
-app.get('/health', (req: Request, res: Response) => {
-  res.json({ status: 'ok' });
+app.get('/health', (_req: Request, res: Response) => {
+  res.json({ status: 'ok', kafkaReady });
 });
 
 // Start server
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
   console.log(`Customer-facing service running on port ${PORT}`);
   await connectKafka();
+});
+
+process.on('SIGTERM', async () => {
+  console.log('Shutting down customer-facing service');
+  await producer.disconnect().catch(() => {});
+  server.close(() => process.exit(0));
 });
