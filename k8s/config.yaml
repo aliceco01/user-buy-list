@@ -32,6 +32,6 @@ metadata:
   name: user-buy-frontend-config
 data:
   PORT: "8080"
-  API_BASE: "http://customer-facing"
+  CUSTOMER_FACING_URL: "http://customer-facing:80"
 
 

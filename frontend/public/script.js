@@ -1,5 +1,3 @@
-const apiBase = window.__CONFIG__?.apiBase || '';
-
 const buyForm = document.getElementById('buy-form');
 const usernameInput = document.getElementById('username');
 const useridInput = document.getElementById('userid');
@@ -22,7 +20,7 @@ buyForm.addEventListener('submit', async (event) => {
       price: Number(priceInput.value)
     };
 
-    const res = await fetch(`${apiBase}/buy`, {
+    const res = await fetch('/api/buy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -52,7 +50,7 @@ fetchBtn.addEventListener('click', async () => {
   results.innerHTML = '';
 
   try {
-    const res = await fetch(`${apiBase}/getAllUserBuys/${userid}`);
+    const res = await fetch(`/api/getAllUserBuys/${userid}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to fetch purchases');
 
