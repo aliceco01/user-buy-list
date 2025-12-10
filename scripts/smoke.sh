@@ -22,3 +22,4 @@ curl -sSf "${API_BASE}/getAllUserBuys/${USER_ID}" | tee /tmp/purchases.json
 echo
 echo "Smoke test complete."
 
+
