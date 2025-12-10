@@ -1,4 +1,5 @@
 # User Buy List
+<img width="465" height="275" alt="image" src="https://github.com/user-attachments/assets/c259bed2-3e75-4b4b-95a6-42a8c26a34b6" />
 
 A simple system for a user to buy random items and get a list of all the items that he bought
 
