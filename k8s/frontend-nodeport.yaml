@@ -11,3 +11,4 @@ spec:
       targetPort: 8080
       nodePort: 30080  # Accessible on any cluster node at port 30080
 
+
