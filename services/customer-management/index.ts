@@ -11,7 +11,6 @@ import client from 'prom-client';
 const app = express();
 app.use(express.json());
 
-
 // ============ PROMETHEUS METRICS SETUP ============
 client.collectDefaultMetrics();
 
