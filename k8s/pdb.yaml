@@ -1,5 +1,6 @@
 # PodDisruptionBudget configuration for customer-facing
 # and customer-management applications
+# This ensures high availability during voluntary disruptions. 
 
 apiVersion: policy/v1
 kind: PodDisruptionBudget
