@@ -64,6 +64,10 @@ async function startKafkaConsumer(): Promise<void> {
     await consumer.connect();
     await consumer.subscribe({ topic: PURCHASE_TOPIC, fromBeginning: true });
 
+    // Mark ready once connected; consumer.run blocks until stopped or it throws
+    kafkaReady = true;
+    console.log('Kafka consumer started');
+
     await consumer.run({
       eachMessage: async ({ message }) => {
         if (!message.value) return;
@@ -79,12 +83,12 @@ async function startKafkaConsumer(): Promise<void> {
       }
     });
 
-    kafkaReady = true;
-    console.log('Kafka consumer started');
   } catch (err) {
     kafkaReady = false;
     console.error('Failed to start Kafka consumer:', err);
     setTimeout(startKafkaConsumer, 5000);
+  } finally {
+    kafkaReady = false;
   }
 }
 

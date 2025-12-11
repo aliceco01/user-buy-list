@@ -19,8 +19,9 @@ spec:
           image: danielqsj/kafka-exporter:v1.7.0
           args:
             - "--kafka.server=kafka:9092"
-            - "--group.include=^purchase-group$"
-            - "--topic.include=^purchases$"
+            - "--kafka.version=3.5.0"
+            - "--group.regex=^purchase-group$"
+            - "--topic.regex=^purchases$"
           ports:
             - name: metrics
               containerPort: 9308
