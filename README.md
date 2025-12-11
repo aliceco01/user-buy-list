@@ -1,63 +1,33 @@
 # User Buy List
 
-A simple system for a user to buy random items and get a list of all the items that he bought.
+A microservices system for users to buy random items and retrieve their purchase history.
 
+## Architecture
 
--
- 
-**
-customer-facing
-**
- - REST API that receives purchases and sends them to Kafka
--
- 
-**
-customer-management
-**
- - Consumes from Kafka and stores purchases in MongoDB
--
- 
-**
-frontend
-**
- - Web UI to buy items and view purchase history
--
- 
-**
-Prometheus + Adapter
-**
- - Collects metrics and exposes them for autoscaling
+- **customer-facing** - REST API that receives purchases and sends them to Kafka
+- **customer-management** - Consumes from Kafka and stores purchases in MongoDB
+- **frontend** - Web UI to buy items and view purchase history
+- **Prometheus + Adapter** - Collects metrics and exposes them for autoscaling
 
 ![Architecture diagram](assets/buylist.drawio.png)
 
 ## Autoscaling Metrics
 
-
- ### customer-facing:
--  CPU, memory
+### customer-facing
+- CPU, memory
 - HTTP RPS
--  in-flight requests 
+- In-flight requests
 
-
-### customer-management 
--CPU
-- memory
+### customer-management
+- CPU, memory
 - Kafka consumer lag
-- work queue depth 
-
-
-# How to get your setup up and running
+- Work queue depth
 
 ## Prerequisites
 
-1. install minikube:
-Install 
-[
-minikube
-](
-https://minikube.sigs.k8s.io/docs/start/
-)
-
+- [minikube](https://minikube.sigs.k8s.io/docs/start/)
+- kubectl
+- Docker
 
 ## Deploy to Minikube
 
@@ -77,12 +47,13 @@ kubectl get pods -w
 
 ## Verify Deployment
 
-check for pods Running:
+Check that all pods are running:
+
 ```bash
 kubectl get pods
 ```
 
-Expected:
+Expected pods:
 - customer-facing (2 replicas)
 - customer-management (2 replicas)
 - kafka
@@ -114,14 +85,55 @@ kubectl port-forward svc/prometheus 9090:9090
 
 Open http://localhost:9090/targets - all targets should be UP.
 
+## Local Development
 
+For local development without Kubernetes, use Docker Compose:
 
-##
- Cleanup
+```bash
+# Start infrastructure (Kafka, MongoDB, Zookeeper)
+docker compose up -d
 
+# Run services locally
+cd services/customer-facing && yarn dev
+cd services/customer-management && yarn dev
+cd frontend && yarn start
 ```
-bash
 
+## API Endpoints
+
+### customer-facing (port 3000)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/buy` | Submit a purchase |
+| GET | `/getAllUserBuys/:userid` | Get all purchases for a user |
+| GET | `/health` | Health check |
+| GET | `/metrics` | Prometheus metrics |
+
+### customer-management (port 3001)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/purchases/:userid` | Get purchases by user ID |
+| GET | `/purchases` | Get all purchases (limit 500) |
+| GET | `/health` | Health check |
+| GET | `/metrics` | Prometheus metrics |
+
+## CI/CD
+
+The GitHub Actions workflow builds and pushes Docker images to GitHub Container Registry on pushes to `main`. Each service is built, type-checked, and containerized independently.
+
+## Smoke Test
+
+Run a quick smoke test against the API:
+
+```bash
+API_BASE=http://localhost:3000 ./scripts/smoke.sh
+```
+
+## Cleanup
+
+```bash
 kubectl delete -f k8s/
 minikube stop
-
+```
