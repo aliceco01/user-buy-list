@@ -25,6 +25,12 @@ A microservices system for users to buy random items and retrieve their purchase
 
 ## Prerequisites
 
+## System Requirements
+- Minikube: 2+ CPUs, 4GB RAM
+- Kubernetes 1.19+
+- Docker 20.10+
+- Ports 3000, 3001, 8080, 9090 available
+
 1. clone the repo
 ```bash
 git clone https://github.com/aliceco01/user-buy-list.git
@@ -122,9 +128,33 @@ Open http://localhost:9090/targets - all targets should be UP.
 
 The GitHub Actions workflow builds and pushes Docker images to GitHub Container Registry on pushes to `main`. Each service is built, type-checked, and containerized independently.
 
-## Smoke Test
+## Testing
 
-Run a quick smoke test against the API:
+### Comprehensive Test Suite
+
+Run all tests to validate the entire system end-to-end:
+
+```bash
+./scripts/test-all.sh
+```
+
+This script:
+- ✓ Verifies all pods are running and ready
+- ✓ Tests health check endpoints
+- ✓ Tests POST /buy endpoint
+- ✓ Tests GET /getAllUserBuys endpoint
+- ✓ Verifies data persistence (REST → Kafka → MongoDB flow)
+- ✓ Validates Prometheus metrics collection
+- ✓ Checks all metric targets are scraping
+- ✓ Tests frontend accessibility
+- ✓ Runs end-to-end smoke test
+- ✓ Generates test summary report
+
+**Expected Output:** All tests passing with summary statistics
+
+### Quick Smoke Test
+
+For a quick validation, run just the smoke test:
 
 ```bash
 API_BASE=http://localhost:3000 ./scripts/smoke.sh
