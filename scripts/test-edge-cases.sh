@@ -501,9 +501,9 @@ main() {
     echo ""
     
     if [ "$TESTS_FAILED" -eq 0 ]; then
-        echo -e "${GREEN}✓ All edge case tests completed successfully!${NC}"
+        echo -e "${GREEN}All edge case tests completed successfully!${NC}"
     else
-        echo -e "${YELLOW}⚠ Some edge cases revealed issues - review above for details.${NC}"
+        echo -e "${YELLOW}Some edge cases revealed issues - review above for details.${NC}"
     fi
 }
 

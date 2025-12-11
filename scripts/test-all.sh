@@ -514,10 +514,10 @@ main() {
     echo ""
     
     if [ "$TESTS_FAILED" -eq 0 ]; then
-        echo -e "${GREEN}✓ All tests passed! Your system is ready for deployment.${NC}"
+        echo -e "${GREEN}All tests passed! Your system is ready for deployment.${NC}"
         exit 0
     else
-        echo -e "${RED}✗ Some tests failed. Please review the output above.${NC}"
+        echo -e "${RED}Some tests failed. Please review the output above.${NC}"
         exit 1
     fi
 }
