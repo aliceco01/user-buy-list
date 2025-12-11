@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Quick smoke test against the customer-facing API.
+# smoke test against the customer-facing API.
 # Usage: API_BASE=http://localhost:3000 ./scripts/smoke.sh
 
 API_BASE="${API_BASE:-http://localhost:3000}"

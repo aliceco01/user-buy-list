@@ -24,7 +24,7 @@ spec:
           emptyDir: {}
       containers:
         - name: user-buy-frontend
-          image: ghcr.io/<owner>/<repo>/user-buy-frontend:latest
+          image: ghcr.io/aliceco01/user-buy-list/user-buy-frontend:latest
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

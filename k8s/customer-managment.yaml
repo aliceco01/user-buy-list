@@ -24,7 +24,7 @@ spec:
           emptyDir: {}
       containers:
         - name: customer-management
-          image: ghcr.io/<owner>/<repo>/customer-management:latest
+          image: ghcr.io/aliceco01/user-buy-list/customer-management:latest
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

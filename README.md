@@ -3,19 +3,11 @@
 A simple system for a user to buy random items and get a list of all the items that he bought
 
 
+## Architecture diagram
+
 ![Architecture diagram](assets/buylist.drawio.png)
 
 
-
-
-
-
-## Components
-- `services/customer-facing`: Express API exposing `POST /buy`, `GET /getAllUserBuys/:userid`, publishes to Kafka.
-- `services/customer-management`: Express API consuming Kafka, storing to MongoDB, exposing `GET /purchases/:userid`.
-- `frontend`: Static UI served by a tiny Express app; calls the customer-facing API.
-- `k8s`: Kafka, MongoDB, both services, frontend, HPAs (CPU/memory + Kafka lag), optional KEDA ScaledObject.
-- `ci`: GitHub Actions builds/tests TypeScript and pushes images to GHCR.
 
 ## Prerequisites
 - Kubernetes cluster + `kubectl`
