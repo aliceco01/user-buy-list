@@ -4,12 +4,14 @@ A microservices system for users to buy random items and retrieve their purchase
 
 ## Architecture
 
+![Architecture diagram](assets/buylist.drawio.png)
+
 - **customer-facing** - REST API that receives purchases and sends them to Kafka
 - **customer-management** - Consumes from Kafka and stores purchases in MongoDB
 - **frontend** - Web UI to buy items and view purchase history
 - **Prometheus + Adapter** - Collects metrics and exposes them for autoscaling
 
-![Architecture diagram](assets/buylist.drawio.png)
+
 
 ## Autoscaling Metrics
 
