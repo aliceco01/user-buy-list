@@ -25,9 +25,18 @@ A microservices system for users to buy random items and retrieve their purchase
 
 ## Prerequisites
 
-- [minikube](https://minikube.sigs.k8s.io/docs/start/)
-- kubectl
-- Docker
+1.Docker installed
+ - Container runtime  
+   Install: https://docs.docker.com/get-docker/
+
+2. minikube installed 
+ - Runs a local Kubernetes cluster on your machine  
+   Install: https://minikube.sigs.k8s.io/docs/start/
+   
+3. kubectl
+- CLI for interacting with Kubernetes  
+   Install: https://kubernetes.io/docs/tasks/tools/
+
 
 ## Deploy to Minikube
 
