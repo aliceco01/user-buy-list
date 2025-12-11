@@ -42,16 +42,25 @@ spec:
                 name: customer-management-config
             - secretRef:
                 name: customer-management-secret
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
           livenessProbe:
             httpGet:
               path: /health
               port: 3001
             initialDelaySeconds: 10
+            periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /health
               port: 3001
             initialDelaySeconds: 5
+            periodSeconds: 5
           resources:
             requests:
               cpu: "100m"

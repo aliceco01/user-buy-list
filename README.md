@@ -33,10 +33,11 @@ cd user-buy-list
 2. Docker installed
  - Container runtime  
    Install: https://docs.docker.com/get-docker/
-. minikube installed 
+
+3. minikube installed 
  - Runs a local Kubernetes cluster on your machine  
    Install: https://minikube.sigs.k8s.io/docs/start/
-3. kubectl
+4. kubectl
 - CLI for interacting with Kubernetes  
    Install: https://kubernetes.io/docs/tasks/tools/
 

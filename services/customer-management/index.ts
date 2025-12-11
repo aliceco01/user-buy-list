@@ -149,8 +149,6 @@ async function startKafkaConsumer(): Promise<void> {
     kafkaReady = false;
     console.error('Failed to start Kafka consumer:', err);
     setTimeout(startKafkaConsumer, 5000);
-  } finally {
-    kafkaReady = false;
   }
 }
 
