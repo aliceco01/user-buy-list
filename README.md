@@ -130,34 +130,20 @@ The GitHub Actions workflow builds and pushes Docker images to GitHub Container 
 
 ## Testing
 
-### Comprehensive Test Suite
-
-Run all tests to validate the entire system end-to-end:
-
 ```bash
+# Full test suite - validates all components and data flow
 ./scripts/test-all.sh
+
+# Quick smoke test
+./scripts/smoke.sh
+
+# Edge cases and error scenarios
+./scripts/test-edge-cases.sh
 ```
 
-This script:
-- ✓ Verifies all pods are running and ready
-- ✓ Tests health check endpoints
-- ✓ Tests POST /buy endpoint
-- ✓ Tests GET /getAllUserBuys endpoint
-- ✓ Verifies data persistence (REST → Kafka → MongoDB flow)
-- ✓ Validates Prometheus metrics collection
-- ✓ Checks all metric targets are scraping
-- ✓ Tests frontend accessibility
-- ✓ Runs end-to-end smoke test
-- ✓ Generates test summary report
-
-**Expected Output:** All tests passing with summary statistics
-
-### Quick Smoke Test
-
-For a quick validation, run just the smoke test:
-
+Override the API base if needed:
 ```bash
-API_BASE=http://localhost:3000 ./scripts/smoke.sh
+API_BASE=http://localhost:3000 ./scripts/test-all.sh
 ```
 
 ## Cleanup
