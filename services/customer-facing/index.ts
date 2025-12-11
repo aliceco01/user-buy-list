@@ -1,4 +1,5 @@
 // handle customer purchases, send to Kafka, fetch from customer-management
+// exports Prometheus metrics and health check via Express server (rest API)
 
 import axios from 'axios';
 import cors from 'cors';
@@ -89,7 +90,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// POST /buy
+// POST /buy - receives purchase from frontend, validates input, sends to Kafka
+// Implements customer-facing REST API + Kafka producer 
 app.post('/buy', async (req: Request, res: Response) => {
   try {
     const { username, userid, price } = req.body;
@@ -97,12 +99,12 @@ app.post('/buy', async (req: Request, res: Response) => {
     if (!username || !userid || price === undefined) {
       return res.status(400).json({ error: 'Missing required fields: username, userid, price' });
     }
-
+// Validate price - can't be negative or zero
     const parsedPrice = Number(price);
     if (Number.isNaN(parsedPrice) || parsedPrice <= 0) {
       return res.status(400).json({ error: 'Price must be a positive number' });
     }
-
+// Create purchase object
     const purchase: Purchase = {
       username,
       userid,
@@ -110,11 +112,13 @@ app.post('/buy', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString()
     };
 
+    // Send purchase to Kafka
     await producer.send({
       topic: PURCHASE_TOPIC,
       messages: [{ value: JSON.stringify(purchase) }]
     });
 
+    // Increment Kafka messages metric
     kafkaProducerMessages.inc();
     res.status(201).json({ message: 'Purchase recorded', purchase });
   } catch (err) {
@@ -135,10 +139,12 @@ app.get('/getAllUserBuys/:userid', async (req: Request, res: Response) => {
   }
 });
 
-// Health check
+// Health check endpoint for Kafka readiness
 app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', kafkaReady });
+  const status = kafkaReady ? 200 : 503;
+  res.status(status).json({ status: kafkaReady ? 'ok' : 'unhealthy', kafkaReady });
 });
+
 
 // Prometheus metrics endpoint
 app.get('/metrics', async (_req: Request, res: Response) => {
@@ -146,12 +152,13 @@ app.get('/metrics', async (_req: Request, res: Response) => {
   res.send(await client.register.metrics());
 });
 
-// Start server
+// Start server and connect to Kafka
 const server = app.listen(PORT, async () => {
   console.log(`Customer-facing service running on port ${PORT}`);
   await connectKafka();
 });
 
+// Graceful shutdown of Kafka producer
 process.on('SIGTERM', async () => {
   console.log('Shutting down customer-facing service');
   await producer.disconnect().catch(() => {});
