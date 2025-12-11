@@ -90,9 +90,12 @@ Expected pods:
 ```bash
 # Port-forward frontend
 kubectl port-forward svc/user-buy-frontend 8080:80
+
+# Or use minikube service to get a tunnel URL
+minikube service user-buy-frontend --url
 ```
 
-Open http://localhost:8080
+Open http://localhost:8080 (port-forward) or the URL printed by `minikube service` (keep the terminal open while using it).
 
 1. **Buy**: Enter username, userid, price, then click Buy
 2. **Get All Buys**: Enter userid, then click getAllUserBuys
