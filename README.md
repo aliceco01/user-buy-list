@@ -25,14 +25,17 @@ A microservices system for users to buy random items and retrieve their purchase
 
 ## Prerequisites
 
-1.Docker installed
+1. clone the repo
+```bash
+git clone https://github.com/aliceco01/user-buy-list.git
+cd user-buy-list
+```
+2. Docker installed
  - Container runtime  
    Install: https://docs.docker.com/get-docker/
-
-2. minikube installed 
+. minikube installed 
  - Runs a local Kubernetes cluster on your machine  
    Install: https://minikube.sigs.k8s.io/docs/start/
-   
 3. kubectl
 - CLI for interacting with Kubernetes  
    Install: https://kubernetes.io/docs/tasks/tools/
@@ -93,20 +96,6 @@ kubectl port-forward svc/prometheus 9090:9090
 ```
 
 Open http://localhost:9090/targets - all targets should be UP.
-
-## Local Development
-
-For local development without Kubernetes, use Docker Compose:
-
-```bash
-# Start infrastructure (Kafka, MongoDB, Zookeeper)
-docker compose up -d
-
-# Run services locally
-cd services/customer-facing && yarn dev
-cd services/customer-management && yarn dev
-cd frontend && yarn start
-```
 
 ## API Endpoints
 
