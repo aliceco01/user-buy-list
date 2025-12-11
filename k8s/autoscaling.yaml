@@ -35,19 +35,18 @@ spec:
   minReplicas: 2
   maxReplicas: 10
   metrics:
-    # Primary signal: Kafka consumer lag for the purchase-group consumer group.
-    # Exposed by a Kafka exporter and surfaced via the Custom/External Metrics API.
-    - type: External
-      external:
-        metric:
-          name: kafka_consumer_group_lag
-          selector:
-            matchLabels:
-              topic: purchases
-              group: purchase-group
+    - type: Resource
+      resource:
+        name: cpu
         target:
-          type: AverageValue
-          averageValue: "50" # target average lag per pod
+          type: Utilization
+          averageUtilization: 60
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 70
   behavior:
     scaleUp:
       stabilizationWindowSeconds: 60

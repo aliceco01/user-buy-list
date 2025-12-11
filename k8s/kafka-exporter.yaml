@@ -19,19 +19,18 @@ spec:
           image: danielqsj/kafka-exporter:v1.7.0
           args:
             - "--kafka.server=kafka:9092"
-            - "--kafka.version=3.5.0"
-            - "--group.regex=^purchase-group$"
-            - "--topic.regex=^purchases$"
+            - "--group.filter=^purchase-group$"
+            - "--topic.filter=^purchases$"
           ports:
             - name: metrics
               containerPort: 9308
           resources:
             requests:
-              cpu: "50m"
-              memory: "64Mi"
+              cpu: 50m
+              memory: 64Mi
             limits:
-              cpu: "250m"
-              memory: "128Mi"
+              cpu: 200m
+              memory: 128Mi
 ---
 apiVersion: v1
 kind: Service
