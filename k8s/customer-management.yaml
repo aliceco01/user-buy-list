@@ -25,7 +25,7 @@ spec:
           emptyDir: {}
       containers:
       - name: customer-management
-        image: ghcr.io/aliceco01/user-buy-list/customer-management:REPLACE_WITH_SHA
+        image: ghcr.io/aliceco01/user-buy-list/customer-management:49174f53fd07a21446431a1761e3f6516846b261
         imagePullPolicy: IfNotPresent
         securityContext:
           allowPrivilegeEscalation: false
