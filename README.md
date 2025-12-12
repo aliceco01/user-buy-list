@@ -21,7 +21,8 @@
 
 2. **Install KEDA:**
    ```bash
-   kubectl apply -f https://github.com/kedacore/keda/releases/latest/download/keda.yaml
+   kubectl apply -f https://github.com/kedacore/keda/releases/download/v2.15.1/keda-2.15.1.yaml
+
    kubectl wait --for=condition=available --timeout=300s deployment/keda-operator -n keda
    ```
 
