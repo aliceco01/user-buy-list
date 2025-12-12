@@ -1,25 +1,10 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: mongodb
-  labels:
-    app: mongodb
-spec:
-  clusterIP: None  # Headless service for StatefulSet
-  selector:
-    app: mongodb
-  ports:
-    - port: 27017
-      targetPort: 27017
----
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: mongodb
   labels:
     app: mongodb
 spec:
-  serviceName: mongodb
   replicas: 1
   selector:
     matchLabels:
@@ -34,6 +19,7 @@ spec:
         runAsUser: 999
         runAsGroup: 999
         fsGroup: 999
+        fsGroupChangePolicy: OnRootMismatch  # Avoid slow recursive chown on PVC mount
         seccompProfile:
           type: RuntimeDefault
       containers:
@@ -47,40 +33,73 @@ spec:
               mountPath: /data/db
           securityContext:
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: false  # MongoDB needs write access to /data/db
+            readOnlyRootFilesystem: false
             capabilities:
               drop:
                 - ALL
-          livenessProbe:
-            exec:
-              command:
-                - mongosh
-                - --eval
-                - "db.adminCommand('ping')"
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-          readinessProbe:
-            exec:
-              command:
-                - mongosh
-                - --eval
-                - "db.adminCommand('ping')"
+          # verifies port is open, not that MongoDB is ready to serve requests.
+          # for real-life scenarios i would use authenticated mongosh ping or app-level health check.
+          startupProbe:
+            tcpSocket:
+              port: 27017
             initialDelaySeconds: 10
             periodSeconds: 5
-            timeoutSeconds: 3
+            timeoutSeconds: 2
+            failureThreshold: 24  # 10s + (24 * 5s) = max 130s to start
+          livenessProbe:
+            tcpSocket:
+              port: 27017
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: 27017
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
           resources:
+            # Sized for simple CRUD operations on small purchase documents (~200 bytes)
+            # Memory: 256Mi request / 512Mi limit to avoid OOM with mongo:7 baseline + WT cache
             requests:
-              cpu: 250m
-              memory: 512Mi
+              cpu: 50m
+              memory: 256Mi
             limits:
-              cpu: 1000m
-              memory: 1Gi
-  volumeClaimTemplates:
-    - metadata:
-        name: mongo-data
-      spec:
-        accessModes: [ReadWriteOnce]
-        resources:
-          requests:
-            storage: 10Gi
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: MONGO_INITDB_DATABASE
+              value: "userbuys"
+          # Tuning for Minikube resource constraints
+          # Minimum allowed WT cache (0.25GB = 256MiB) per MongoDB requirements
+          # Limited connections to reduce overhead
+          # Journaling enabled (default) for durability with PVC
+          args:
+            - --wiredTigerCacheSizeGB=0.25
+            - --maxConns=100
+      volumes:
+        - name: mongo-data
+          persistentVolumeClaim:
+            claimName: mongo-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+spec:
+  selector:
+    app: mongodb
+  ports:
+    - port: 27017
+      targetPort: 27017
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi  # Right-sized for demo: small purchase documents, Minikube-friendly
