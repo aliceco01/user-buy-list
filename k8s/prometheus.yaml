@@ -8,26 +8,61 @@ data:
       scrape_interval: 15s
       evaluation_interval: 15s
     scrape_configs:
+      # Scrape customer-facing pods with proper Kubernetes labels
       - job_name: 'customer-facing'
         kubernetes_sd_configs:
           - role: pod
+            namespaces:
+              names:
+                - default
         relabel_configs:
+          # Keep only pods with app=customer-facing label
           - source_labels: [__meta_kubernetes_pod_label_app]
             regex: customer-facing
             action: keep
+          # Set the scrape address from pod IP
           - source_labels: [__meta_kubernetes_pod_ip]
+            regex: (.+)
             target_label: __address__
-            replacement: ${1}:3000
+            replacement: $1:3000
+          # Add pod name as label
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          # Add namespace as label
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          # Add app label
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            target_label: app
+      
+      # Scrape customer-management pods with proper Kubernetes labels
       - job_name: 'customer-management'
         kubernetes_sd_configs:
           - role: pod
+            namespaces:
+              names:
+                - default
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_label_app]
             regex: customer-management
             action: keep
           - source_labels: [__meta_kubernetes_pod_ip]
+            regex: (.+)
             target_label: __address__
-            replacement: ${1}:3001
+            replacement: $1:3001
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            target_label: app
+      
+      # KEDA metrics endpoint
+      - job_name: 'keda'
+        static_configs:
+          - targets: ['keda-operator-metrics.keda.svc.cluster.local:8080']
+      
+      # Kafka exporter for consumer lag metrics (used by Prometheus Adapter)
       - job_name: 'kafka-exporter'
         static_configs:
           - targets: ['kafka-exporter:9308']
@@ -81,6 +116,13 @@ spec:
         app: prometheus
     spec:
       serviceAccountName: prometheus
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: prometheus
           image: prom/prometheus:v2.47.0
@@ -95,6 +137,24 @@ spec:
               mountPath: /etc/prometheus
             - name: storage
               mountPath: /prometheus
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: 9090
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9090
+            initialDelaySeconds: 5
+            periodSeconds: 5
           resources:
             requests:
               cpu: 100m

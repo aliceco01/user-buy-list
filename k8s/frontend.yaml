@@ -5,7 +5,6 @@ metadata:
   labels:
     app: user-buy-frontend
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: user-buy-frontend
@@ -19,15 +18,21 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       volumes:
         - name: tmp
           emptyDir: {}
       containers:
         - name: user-buy-frontend
-          image: ghcr.io/aliceco01/user-buy-list/user-buy-frontend:latest
+          image: ghcr.io/aliceco01/user-buy-list/user-buy-frontend:REPLACE_WITH_SHA
+          imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
           ports:
             - containerPort: 8080
           volumeMounts:
