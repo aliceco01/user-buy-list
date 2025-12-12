@@ -15,6 +15,7 @@ metadata:
   name: zookeeper
   labels:
     app: zookeeper
+  #for demo simplicity, a single replica with  no persistence. in real production would use StatefulSet with multiple replicas.
 spec:
   replicas: 1
   selector:
@@ -83,6 +84,8 @@ metadata:
   name: kafka
   labels:
     app: kafka
+  #for demo simplicity, a single replica with  no persistence. in real production would use StatefulSet with multiple replicas.
+  # Production would use StatefulSet with PVCs for log.dirs to survive restarts.
 spec:
   replicas: 1
   selector:
