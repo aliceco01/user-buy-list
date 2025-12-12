@@ -35,7 +35,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: zookeeper
-          image: confluentinc/cp-zookeeper:7.5.0
+          image: confluentinc/cp-zookeeper:7.8.0
           ports:
             - containerPort: 2181
           env:
@@ -103,7 +103,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: kafka
-          image: confluentinc/cp-kafka:7.5.0
+          image: confluentinc/cp-kafka:7.8.0
           ports:
             - containerPort: 9092
           env:

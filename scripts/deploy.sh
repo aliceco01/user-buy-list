@@ -14,8 +14,8 @@ if ! kubectl cluster-info &> /dev/null; then
     exit 1
 fi
 
-echo "Step 1: Installing KEDA v2.12.1..."
-kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.12.1/keda-2.12.1.yaml
+echo "Step 1: Installing KEDA (latest)..."
+kubectl apply --server-side -f https://github.com/kedacore/keda/releases/latest/download/keda.yaml
 
 echo "Waiting for KEDA to be ready..."
 kubectl wait --for=condition=available --timeout=300s deployment/keda-operator -n keda

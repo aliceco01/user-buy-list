@@ -21,7 +21,7 @@
 
 2. **Install KEDA:**
    ```bash
-   kubectl apply -f https://github.com/kedacore/keda/releases/download/v2.12.1/keda-2.12.1.yaml
+   kubectl apply -f https://github.com/kedacore/keda/releases/latest/download/keda.yaml
    kubectl wait --for=condition=available --timeout=300s deployment/keda-operator -n keda
    ```
 
@@ -36,3 +36,18 @@
    kubectl port-forward svc/user-buy-frontend 8080:80
    ```
    Open http://localhost:8080
+
+## Cleanup
+
+```bash
+# Delete all resources
+kubectl delete -f k8s/
+
+# Delete KEDA
+kubectl delete -f https://github.com/kedacore/keda/releases/latest/download/keda.yaml
+
+# Delete cluster (if using kind/minikube)
+kind delete cluster --name user-buy-cluster
+# or
+minikube delete
+```
