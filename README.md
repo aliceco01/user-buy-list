@@ -8,52 +8,32 @@ A Kubernetes-based implementation of a simple purchase tracking system with even
 
 ## Quick Start
 
-### Option 1: Automated Deployment
+### Prerequisites
+- Kubernetes cluster (minikube or kind)
+- kubectl configured
 
-for a quick deployment option, run: 
+### Deployment
+
 ```bash
 ./scripts/deploy.sh
 ```
 
-### Option 2: Manual Step-by-Step
+This script will:
+- Install KEDA v2.15.1
+- Deploy infrastructure (MongoDB, Kafka, Prometheus)
+- Deploy applications (customer-facing, customer-management, frontend)
+- Open the frontend in your browser
 
-1. **Create a local Kubernetes cluster:**
-   ```bash
-   kind create cluster --name user-buy-cluster
-   # or
-   minikube start
-   ```
+### Access Services
 
-2. **Install KEDA:**
-   ```bash
-   kubectl apply -f https://github.com/kedacore/keda/releases/download/v2.15.1/keda-2.15.1.yaml
+The frontend will open automatically, or manually access:
+```bash
+kubectl port-forward svc/user-buy-frontend 8080:80
+```
+Then open http://localhost:8080
 
-   kubectl wait --for=condition=available --timeout=300s deployment/keda-operator -n keda
-   ```
-
-3. **Apply all manifests:**
-   ```bash
-   cd k8s
-   kubectl apply -f .
-   ```
-
-4. **Access the frontend:**
-   ```bash
-   kubectl port-forward svc/user-buy-frontend 8080:80
-   ```
-   Open http://localhost:8080
-
-## Cleanup
+### Cleanup
 
 ```bash
-# Delete all resources
-kubectl delete -f k8s/
-
-# Delete KEDA
-kubectl delete -f https://github.com/kedacore/keda/releases/latest/download/keda.yaml
-
-# Delete cluster (if using kind/minikube)
-kind delete cluster --name user-buy-cluster
-# or
-minikube delete
+./scripts/cleanup.sh
 ```
