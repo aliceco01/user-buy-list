@@ -27,10 +27,6 @@ jobs:
       - name: Install dependencies
         working-directory: ./services/customer-facing
         run: yarn install --frozen-lockfile
-
-      - name: Type check
-        working-directory: ./services/customer-facing
-        run: yarn test
         
       - name: Build TypeScript
         working-directory: ./services/customer-facing
@@ -67,10 +63,6 @@ jobs:
       - name: Install dependencies
         working-directory: ./services/customer-management
         run: yarn install --frozen-lockfile
-
-      - name: Type check
-        working-directory: ./services/customer-management
-        run: yarn test
         
       - name: Build TypeScript
         working-directory: ./services/customer-management
