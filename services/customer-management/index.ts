@@ -118,7 +118,7 @@ async function connectMongo(): Promise<void> {
 async function startKafkaConsumer(): Promise<void> {
   try {
     await consumer.connect();
-    await consumer.subscribe({ topic: PURCHASE_TOPIC, fromBeginning: true });
+    await consumer.subscribe({ topic: PURCHASE_TOPIC, fromBeginning: false });
 
     kafkaReady = true;
     console.log('Kafka consumer started');

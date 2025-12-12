@@ -14,12 +14,14 @@ spec:
       labels:
         app: mongodb
     spec:
+    # Note:  MongoDB runs without authentication for demo simplicity.
+    # real-world  deployment would use secrets for credentials & MONGODB_URI with auth
       securityContext:
         runAsNonRoot: true
         runAsUser: 999
         runAsGroup: 999
         fsGroup: 999
-        fsGroupChangePolicy: OnRootMismatch  # Avoid slow recursive chown on PVC mount
+        fsGroupChangePolicy: OnRootMismatch  # avoid slow recursive chown on PVC mount
         seccompProfile:
           type: RuntimeDefault
       containers:

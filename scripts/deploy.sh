@@ -40,7 +40,6 @@ kubectl apply -f k8s/customer-facing.yaml
 kubectl apply -f k8s/frontend.yaml
 kubectl apply -f k8s/pdb.yaml
 kubectl apply -f k8s/autoscaling.yaml
-kubectl apply -f k8s/ingress.yaml
 
 echo ""
 echo "=== Deployment Status ==="
@@ -52,8 +51,10 @@ kubectl get scaledobjects
 
 echo ""
 echo "=== Deployment Complete ==="
-echo "Access the application:"
-echo "  kubectl port-forward svc/user-buy-frontend 8080:80"
-echo "  Or via ingress:"
-echo "    minikube tunnel"
-echo "    Open http://localhost"
+echo ""
+echo "Waiting for frontend to be ready..."
+kubectl wait --for=condition=ready pod -l app=user-buy-frontend --timeout=120s
+
+echo ""
+echo "Opening frontend in browser..."
+minikube service user-buy-frontend

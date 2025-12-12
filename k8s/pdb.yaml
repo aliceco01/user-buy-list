@@ -1,7 +1,6 @@
-# PodDisruptionBudget configuration for customer-facing and customer-management
-# Ensures high availability during voluntary disruptions (node drains, upgrades)
-# maxUnavailable: 1 means "at most 1 pod can be unavailable during disruption"
-# This is clearer than minAvailable and scales better with autoscaling
+# pdb configuration for customer-facing and customer-management
+# ensures high availability during voluntary disruptions (node drains, upgrades)
+
 
 apiVersion: policy/v1
 kind: PodDisruptionBudget

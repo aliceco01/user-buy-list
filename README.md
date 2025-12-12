@@ -1,11 +1,16 @@
 # User Buy List
 
+A Kubernetes-based implementation of a simple purchase tracking system with event-driven architecture, advanced autoscaling, full observability, and CI/CD.
+
+## Architecture diagram
+
 ![Architecture diagram](assets/buylist.drawio.png)
 
 ## Quick Start
 
 ### Option 1: Automated Deployment
 
+for a quick deployment option, run: 
 ```bash
 ./scripts/deploy.sh
 ```
