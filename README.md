@@ -15,211 +15,22 @@ Before running, ensure you have installed:
 ####
 1. Docker must be installed and running
 
-
-**
-macOS:
-**
-
-```
-bash
-
-brew 
-install
- --cask 
-docker
-
-# Then launch Docker Desktop from Applications
-
-```
-
-**
-Ubuntu/Debian:
-**
-
-```
-bash
-
-sudo
- 
-apt-get
- update
-sudo
- 
-apt-get
- 
-install
- docker.io
-sudo
- systemctl start 
-docker
-
-sudo
- 
-usermod
- -aG 
-docker
- 
-$USER
-  
-# Log out and back in after this
-
-```
-
-**
-Windows:
-**
-
-Download and install 
-[
-Docker Desktop
-](
-https://www.docker.com/products/docker-desktop/
-)
-
-**
-Verify installation:
-**
-
-```
-bash
-
-docker
- --version
-docker
- info  
-# Should show server info, not connection error
-
-```
-
-
-####
- 2. Install minikube
-
-**
-macOS:
-**
-
-```
-bash
-
-brew 
-install
- minikube
-
-```
-
-**
-Ubuntu/Debian:
-**
-
-```
-bash
-
-curl
- -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-sudo
- 
-install
- minikube-linux-amd64 /usr/local/bin/minikube
-
-```
-
-
-**
-Windows (PowerShell as Admin):
-**
-
-```
-powershell
-
-choco install minikube
-# Or download from https://minikube.sigs.k8s.io/docs/start/
-
-```
-
-**
-Verify installation:
-**
-
-```
-bash
-
-minikube version
-
-```
-
+2. Install minikube:
 
 3. kubectl configured
 
+## note about minikube 
 
-**
-macOS:
-**
-
-```
-bash
-
-brew 
-install
- kubectl
-
-```
+The deployment script requires and manages Minikube. 
+Minikube installs in 5 minutes and runs alongside other tools without conflict.
+For the sake of a streamlined, one-click demo experience, the provided deploy.sh script is optimized specifically for its minikube service tunnel capabilities and Docker driver handling. If you are running on non-Minikube Clusters,the Kubernetes manifests in k8s directory are standard and cloud-agnostic. 
+If you prefer to use a different cluster, a manual configuration of the k8s files in possible.
 
 
-**
-Ubuntu/Debian:
-**
-
-```
-bash
-
-curl
- -LO 
-"https://dl.k8s.io/release/
-$(
-curl
- -L -s https://dl.k8s.io/release/stable.txt
-)
-/bin/linux/amd64/kubectl"
-
-sudo
- 
-install
- kubectl /usr/local/bin/kubectl
-
-```
-
-
-**
-Windows:
-**
-
-```
-powershell
-
-choco install kubernetes-
-cli
-
-```
-
-
-**
-Verify installation:
-**
-
-```
-bash
-
-kubectl version --client
-
-```
-
-
----
 
 ### Deployment
 
-One Command Deployment:
+One Command Deployment
 
 ```bash
 ./scripts/deploy.sh
@@ -235,19 +46,15 @@ This script automatically:
 6. Opens the frontend in your browser
 
 
-###
- Manual Access
-
+### Manual Access
 
 If the browser doesn't open automatically:
-```
-bash
 
 # Option 1: minikube service (recommended)
 
-minikube 
-service
- user-buy-frontend
+echo "Frontend is available at:"
+minikube service user-buy-frontend --url 
+
 # Option 2: Port forwarding
 
 kubectl port-forward svc/user-buy-frontend 
@@ -273,6 +80,49 @@ This project implements a purchase tracking system with the following data flow:
 - Event consumed -> customer-management consumes from Kafka, persists to MongoDB
 - User queries purchases -> customer-facing fetches from customer-management API
 
+## Autoscaling Strategy
+
+### Hybrid Approach
+
+Use HPA for HTTP services, KEDA for Kafka consumers
+**Why not just HPA for everything?**
+- Display range of experience with autoscailing strategies 
+- HPA scales on CPU/memory or custom metrics
+- Kafka consumer lag isn't a metric HPA understands natively
+- CPU-based scaling for consumers is misleading (idle consumer waiting for messages = low CPU, but might have huge backlog)
+
+**Why not just KEDA for everything?**
+- KEDA adds complexity (another operator to install)
+- HPA is built-in, well-understood, sufficient for HTTP workloads
+- customer-facing already exposes Prometheus metrics that HPA can use via Prometheus Adapter
+
+
+## Prometheus Metrics
+
+- http_requests_total - Request volume
+- http_request_duration_seconds - Latency percentiles
+- http_requests_in_flight - Concurrency (HPA trigger)
+- kafka_producer_messages_total - producer throughput
+- kafka_messages_processed_total - Consumer throughput
+- kafka_message_processing_seconds - Processing latency
+
+
+### Accessing Metrics
+
+1. Prometheus UI:
+
+```
+kubectl port-forward svc/prometheus 9090:9090
+# Open http://localhost:9090
+```
+
+2. Raw metrics from services
+```
+kubectl port-forward svc/customer-facing 3000:80
+curl http://localhost:3000/metrics
+
+```
+
 
 ## CICD
 
@@ -287,7 +137,7 @@ Each pipeline run follows a deterministic flow. Application artifacts are built 
 └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
 
 ```
-
+For demo simplicity, I avoided anything that requires cluster credentials in CI (security risk), and that has no audit trail. Additionally, it works with ArgoCD/Flux if added later. 
 
 
 **Trade-offs acknowledged:**
@@ -295,6 +145,12 @@ Each pipeline run follows a deterministic flow. Application artifacts are built 
 - No Docker layer caching (builds are slower but simpler)
 - Requires branch protection rules in production to prevent unauthorized commits
 
+
+
+## Production / real-life Considerations
+
+This demo makes tradeoffs for simplicity.
+Some of the trade-offs and how this system should behave in non-demo envs. 
 
 
 ## Security Considerations
@@ -308,3 +164,5 @@ Each pipeline run follows a deterministic flow. Application artifacts are built 
 - In non-demo enviornemnts, I would at least use secrets for credentials, and enable auth.
 
 ### Single-Replica Stateful Services
+
+
