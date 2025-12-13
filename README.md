@@ -19,11 +19,14 @@ Before running, ensure you have installed:
 
 3. kubectl configured
 
-## note about minikube 
+###  Note about minikube 
 
 The deployment script requires and manages Minikube. 
+
 Minikube installs in 5 minutes and runs alongside other tools without conflict.
+
 For the sake of a streamlined, one-click demo experience, the provided deploy.sh script is optimized specifically for its minikube service tunnel capabilities and Docker driver handling. If you are running on non-Minikube Clusters,the Kubernetes manifests in k8s directory are standard and cloud-agnostic. 
+
 If you prefer to use a different cluster, a manual configuration of the k8s files in possible.
 
 
@@ -46,21 +49,20 @@ This script automatically:
 6. Opens the frontend in your browser
 
 
-### Manual Access
+## Manual Access
 
 If the browser doesn't open automatically:
 
-# Option 1: minikube service (recommended)
+### Option 1: minikube service (recommended)
 
 echo "Frontend is available at:"
 minikube service user-buy-frontend --url 
 
-# Option 2: Port forwarding
-
-kubectl port-forward svc/user-buy-frontend 
-8080
-:80
-# Then open http://localhost:8080
+### Option 2: Port forwarding
+```
+kubectl port-forward svc/user-buy-frontend 8080:80
+Then open http://localhost:8080
+```
 
 
 ### Cleanup
@@ -69,10 +71,7 @@ kubectl port-forward svc/user-buy-frontend
 ./scripts/cleanup.sh
 ```
 
-
-## Design Decisions 
-
-## Overview
+### Design Decisions 
 
 This project implements a purchase tracking system with the following data flow:
 - User submits purchase -> Frontend sends request to customer-facing API
@@ -80,9 +79,19 @@ This project implements a purchase tracking system with the following data flow:
 - Event consumed -> customer-management consumes from Kafka, persists to MongoDB
 - User queries purchases -> customer-facing fetches from customer-management API
 
-## Autoscaling Strategy
 
-### Hybrid Approach
+
+#### Production / real-life Considerations:
+
+
+This demo makes tradeoffs for simplicity.
+Some of the trade-offs and how this system should behave in non-demo envs. 
+
+
+
+### Autoscaling Strategy
+
+Hybrid Approach:
 
 Use HPA for HTTP services, KEDA for Kafka consumers
 **Why not just HPA for everything?**
@@ -127,7 +136,10 @@ curl http://localhost:3000/metrics
 ## CICD
 
 The pipeline is intentionally designed to avoid direct cluster access and to keep deployment state fully declarative and auditable in Git. 
-Each pipeline run follows a deterministic flow. Application artifacts are built first, container images are published next, Kubernetes manifests are updated to reference immutable image digests, and the updated manifests are committed back to the repository.
+
+Each pipeline run follows a deterministic flow, and application artifacts are built first, container images are published next, Kubernetes manifests are updated to reference immutable image digests, and the updated manifests are committed back to the repository.
+
+For demo simplicity, I avoided anything that requires cluster credentials in CI (security overhead), and that has no audit trail. Additionally, it works with ArgoCD/Flux if added later.
 
 ```
 
@@ -137,32 +149,18 @@ Each pipeline run follows a deterministic flow. Application artifacts are built 
 └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
 
 ```
-For demo simplicity, I avoided anything that requires cluster credentials in CI (security risk), and that has no audit trail. Additionally, it works with ArgoCD/Flux if added later. 
-
-
+ 
 **Trade-offs acknowledged:**
 
 - No Docker layer caching (builds are slower but simpler)
 - Requires branch protection rules in production to prevent unauthorized commits
 
 
-
-## Production / real-life Considerations
-
-This demo makes tradeoffs for simplicity.
-Some of the trade-offs and how this system should behave in non-demo envs. 
-
-
-## Security Considerations
-
-
-### MongoDB Without Authentication
+### MongoDB Without Authentication and security considerations 
 
  MongoDB runs without auth in this demo.  This was intentionally done for the following reasons:
 - simplify setup for reviewers.
 - Focus on Kubernetes patterns, not MongoDB ops
 - In non-demo enviornemnts, I would at least use secrets for credentials, and enable auth.
-
-### Single-Replica Stateful Services
 
 
