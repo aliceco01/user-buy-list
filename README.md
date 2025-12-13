@@ -8,26 +8,21 @@ A Kubernetes based implementation of a simple purchase tracking system with even
 
 ## Quick Start
 
+
+The project is designed to run  with a single command using Minikube.
+
+
 ### Prerequisites
 
 Before running, ensure you have installed:
 
-####
+
 1. Docker must be installed and running
 
 2. Install minikube:
 
 3. kubectl configured
 
-###  Note about minikube 
-
-The deployment script requires and manages Minikube. 
-
-Minikube installs in 5 minutes and runs alongside other tools without conflict.
-
-For the sake of a streamlined, one-click demo experience, the provided deploy.sh script is optimized specifically for its minikube service tunnel capabilities and Docker driver handling. If you are running on non-Minikube Clusters,the Kubernetes manifests in k8s directory are standard and cloud-agnostic. 
-
-If you prefer to use a different cluster, a manual configuration of the k8s files in possible.
 
 
 
@@ -35,7 +30,7 @@ If you prefer to use a different cluster, a manual configuration of the k8s file
 
 One Command Deployment
 
-```bash
+```
 ./scripts/deploy.sh
 ```
 
@@ -91,32 +86,20 @@ Some of the trade-offs and how this system should behave in non-demo envs.
 
 ### Autoscaling Strategy
 
-Hybrid Approach:
+The system uses a hybrid autoscaling approach.
 
-Use HPA for HTTP services, KEDA for Kafka consumers
-**Why not just HPA for everything?**
-- Display range of experience with autoscailing strategies 
-- HPA scales on CPU/memory or custom metrics
-- Kafka consumer lag isn't a metric HPA understands natively
-- CPU-based scaling for consumers is misleading (idle consumer waiting for messages = low CPU, but might have huge backlog)
+HTTP-based services scale using HPA (Horizontal Pod Autoscaler) based on request-related metrics exposed via Prometheus. Kafka consumers scale using KEDA (Kubernetes Event-Driven Autoscaling) based on consumer lag.
 
-**Why not just KEDA for everything?**
-- KEDA adds complexity (another operator to install)
-- HPA is built-in, well-understood, sufficient for HTTP workloads
-- customer-facing already exposes Prometheus metrics that HPA can use via Prometheus Adapter
+This separation reflects real-world behavior. Kafka consumers often appear idle from a CPU perspective while still being overloaded due to message backlog, making CPU-based scaling misleading. At the same time, using KEDA for all workloads would add unnecessary operational complexity where HPA is sufficient.
+
+### Observability
+
+Services expose Prometheus metrics for request volume, latency, concurrency, and message processing behavior. These metrics are used both for visibility and for autoscaling decisions.
+
+Metrics can be accessed via the Prometheus UI
 
 
-## Prometheus Metrics
 
-- http_requests_total - Request volume
-- http_request_duration_seconds - Latency percentiles
-- http_requests_in_flight - Concurrency (HPA trigger)
-- kafka_producer_messages_total - producer throughput
-- kafka_messages_processed_total - Consumer throughput
-- kafka_message_processing_seconds - Processing latency
-
-
-### Accessing Metrics
 
 1. Prometheus UI:
 
@@ -133,6 +116,9 @@ curl http://localhost:3000/metrics
 ```
 
 
+or directly from the services’ /metrics endpoints.
+
+
 ## CICD
 
 The pipeline is intentionally designed to avoid direct cluster access and to keep deployment state fully declarative and auditable in Git. 
@@ -141,26 +127,51 @@ Each pipeline run follows a deterministic flow, and application artifacts are bu
 
 For demo simplicity, I avoided anything that requires cluster credentials in CI (security overhead), and that has no audit trail. Additionally, it works with ArgoCD/Flux if added later.
 
-```
 
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│    Build    │───►│    Push     │───►│   Update    │───►│   Commit    │
-│  TypeScript │    │  to GHCR    │    │  Manifests  │    │   to Repo   │
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
-
-```
  
-**Trade-offs acknowledged:**
+**Trade-offs:**
 
 - No Docker layer caching (builds are slower but simpler)
 - Requires branch protection rules in production to prevent unauthorized commits
 
 
-### MongoDB Without Authentication and security considerations 
+### Demo-related trade-offs
 
- MongoDB runs without auth in this demo.  This was intentionally done for the following reasons:
-- simplify setup for reviewers.
-- Focus on Kubernetes patterns, not MongoDB ops
-- In non-demo enviornemnts, I would at least use secrets for credentials, and enable auth.
+Several infrastructure choices favor clarity and reproducibility over optimization, which is intentional for a reviewer-facing assignment. 
+
+For simplicity, MongoDB runs without authentication in this demo. In a real environment, credentials would be managed via Kubernetes Secrets, authentication would be enabled, and additional hardening would be applied.
 
 
+
+
+### Why Minikube
+
+This repository is designed to run locally with a single command using Minikube, providing a consistent and predictable Kubernetes environment for reviewers.
+
+All Kubernetes manifests are standard and cluster-agnostic. Minikube is used only to simplify local service access during the demo.
+
+## Operator-based approach
+
+In this project, the operator pattern is used selectively, where it provides clear value, rather than applied uniformly. Core application services are deployed as standard Deployments, while supporting systems that benefit from ongoing reconciliation and understanding of runtime state are managed via operators. 
+
+For a local demo, operator usage adds minimal overhead while allowing the same manifests and mental model to scale naturally to production environments. If this system were extended further, additional concerns such as backup orchestration, rolling upgrades, and failure recovery would be handled through the same operator reconciliation loop rather than bespoke automation. 
+
+To run the project locally, use the operator-based deployment by simply executing ```./scripts/deploy-operator.sh.```
+
+ The operator handles application setup automatically and no manual configuration is required - it will:
+
+1. Starts Minikube and assumes a local control plane.
+
+2. Builds a custom operator container image from operator/.
+
+3. Loads that image directly into the Minikube node image cache.
+
+4. Installs KEDA (an external operator).
+
+5. Applies Kustomize (kubectl apply -k) manifests for your operator.
+
+6. Patches the operator Deployment to use the locally built image.
+
+7. Applies a sample Custom Resource (userbuyslist-sample.yaml) that the operator reconciles.
+
+8. The operator is therefore responsible for deploying (some or all of) the application resources.
