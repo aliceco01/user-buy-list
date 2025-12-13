@@ -179,6 +179,6 @@ To run the project locally, use the operator-based deployment by simply executin
 
 ---
 
-## Note on Tooling
+#### Note on Tooling
 
 This project uses shell scripts (`deploy.sh`, `cleanup.sh`, `test-all.sh`) rather than a Makefile. This decision prioritizes simplicity and visibility—each script is straightforward to read, understand, and modify. For a demo and interview context, this approach reduces friction for reviewers and makes the deployment flow immediately transparent.
