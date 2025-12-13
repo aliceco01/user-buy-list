@@ -85,14 +85,6 @@ This project implements a purchase tracking system with the following data flow:
 
 
 
-#### Production / real-life Considerations:
-
-
-This demo makes tradeoffs for simplicity.
-Some of the trade-offs and how this system should behave in non-demo envs. 
-
-
-
 ### Autoscaling Strategy
 
 The system uses a hybrid autoscaling approach.
@@ -184,3 +176,9 @@ To run the project locally, use the operator-based deployment by simply executin
 7. Applies a sample Custom Resource (userbuyslist-sample.yaml) that the operator reconciles.
 
 8. The operator is therefore responsible for deploying (some or all of) the application resources.
+
+---
+
+## Note on Tooling
+
+This project uses shell scripts (`deploy.sh`, `cleanup.sh`, `test-all.sh`) rather than a Makefile. This decision prioritizes simplicity and visibility—each script is straightforward to read, understand, and modify. For a demo and interview context, this approach reduces friction for reviewers and makes the deployment flow immediately transparent.
