@@ -44,8 +44,6 @@ This script automatically:
 6. Opens the frontend in your browser
 
 
-## Manual Access
-
 If the browser doesn't open automatically:
 
 ### Option 1: minikube service (recommended)
@@ -58,6 +56,15 @@ minikube service user-buy-frontend --url
 kubectl port-forward svc/user-buy-frontend 8080:80
 Then open http://localhost:8080
 ```
+
+### Tests 
+
+To run the tests locally:
+```
+./scripts/test-all.sh
+```
+
+The tests assume the system is already running in Minikube and interact with the services via exposed endpoints. They are designed to be idempotent and safe to re-run during development.
 
 
 ### Cleanup
@@ -119,7 +126,7 @@ curl http://localhost:3000/metrics
 or directly from the services’ /metrics endpoints.
 
 
-## CICD
+### CICD
 
 The pipeline is intentionally designed to avoid direct cluster access and to keep deployment state fully declarative and auditable in Git. 
 
@@ -129,7 +136,7 @@ For demo simplicity, I avoided anything that requires cluster credentials in CI 
 
 
  
-**Trade-offs:**
+Trade-offs:
 
 - No Docker layer caching (builds are slower but simpler)
 - Requires branch protection rules in production to prevent unauthorized commits
@@ -144,13 +151,13 @@ For simplicity, MongoDB runs without authentication in this demo. In a real envi
 
 
 
-### Why Minikube
+#### Why Minikube
 
 This repository is designed to run locally with a single command using Minikube, providing a consistent and predictable Kubernetes environment for reviewers.
 
 All Kubernetes manifests are standard and cluster-agnostic. Minikube is used only to simplify local service access during the demo.
 
-## Operator-based approach
+#### Operator-based approach
 
 In this project, the operator pattern is used selectively, where it provides clear value, rather than applied uniformly. Core application services are deployed as standard Deployments, while supporting systems that benefit from ongoing reconciliation and understanding of runtime state are managed via operators. 
 
