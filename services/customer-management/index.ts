@@ -1,6 +1,6 @@
 // read and write customer purchase data from MongoDB
 // consume purchase messages from Kafka
-// expose REST API for reading and writing purchase data
+// expose REST API for reading purchase data
 // health check endpoint
 
 import express, { Request, Response, NextFunction } from 'express';
