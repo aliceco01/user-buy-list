@@ -9,6 +9,14 @@ if ! minikube status | grep -q "Running"; then
     minikube start --memory=4096 --cpus=2
 fi
 
+# Build operator image locally
+echo "Building operator image..."
+docker build -t userbuylist-operator:local operator/
+
+# Load image into minikube
+echo "Loading operator image into minikube..."
+minikube image load userbuylist-operator:local
+
 # Install KEDA (required for autoscaling)
 echo "Installing KEDA..."
 kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.15.1/keda-2.15.1.yaml
@@ -17,6 +25,10 @@ kubectl wait --for=condition=available --timeout=120s deployment/keda-operator -
 # Install operator
 echo "Installing UserBuyList operator..."
 kubectl apply -k operator/manifests/
+
+# Patch operator deployment to use local image
+echo "Updating operator to use local image..."
+kubectl patch deployment userbuylist-operator -p '{"spec":{"template":{"spec":{"containers":[{"name":"operator","image":"userbuylist-operator:local","imagePullPolicy":"IfNotPresent"}]}}}}'
 
 # Wait for operator
 echo "Waiting for operator..."
