@@ -1,6 +1,6 @@
 # User Buy List
 
-A Kubernetes based implementation of a simple purchase tracking system with event-driven architecture, advanced autoscaling, full observability, and CI/CD.
+A Kubernetes based implementation of a simple purchase tracking system.
 
 ## Architecture diagram
 
