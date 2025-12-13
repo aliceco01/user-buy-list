@@ -19,7 +19,7 @@ data:
   KAFKA_GROUP_ID: "purchase-group"
 ---
 apiVersion: v1
-kind: Secret
+kind: Secret ## this secret holds the MongoDB connection string. would be replaced with a more secure vault solution in production.
 metadata:
   name: customer-management-secret
 type: Opaque

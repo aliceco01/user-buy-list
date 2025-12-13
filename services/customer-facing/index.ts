@@ -131,7 +131,9 @@ app.post('/buy', async (req: Request, res: Response) => {
 app.get('/getAllUserBuys/:userid', async (req: Request, res: Response) => {
   try {
     const { userid } = req.params;
-    const response = await axios.get(`${CUSTOMER_MANAGEMENT_URL}/purchases/${userid}`);
+    const response = await axios.get(`${CUSTOMER_MANAGEMENT_URL}/purchases/${userid}`, {
+      timeout: 5000 // 5 second timeout to prevent hanging
+    });
     res.json(response.data);
   } catch (err) {
     console.error('Error fetching purchases:', err);

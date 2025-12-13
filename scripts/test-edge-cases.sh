@@ -16,7 +16,7 @@
 # Usage: ./scripts/test-edge-cases.sh
 ################################################################################
 
-set -euo pipefail
+set -eu
 
 # Color codes
 RED='\033[0;31m'

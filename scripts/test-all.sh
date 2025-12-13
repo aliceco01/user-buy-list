@@ -14,7 +14,7 @@
 # Usage: ./scripts/test-all.sh
 ################################################################################
 
-set -euo pipefail
+set -eu
 
 # Color codes for output
 RED='\033[0;31m'
@@ -45,17 +45,17 @@ log_info() {
 
 log_success() {
     echo -e "${GREEN}[PASS]${NC} $1"
-    ((TESTS_PASSED++))
+    ((TESTS_PASSED++)) || true
 }
 
 log_error() {
     echo -e "${RED}[FAIL]${NC} $1"
-    ((TESTS_FAILED++))
+    ((TESTS_FAILED++)) || true
 }
 
 log_warning() {
     echo -e "${YELLOW}[WARN]${NC} $1"
-    ((TESTS_SKIPPED++))
+    ((TESTS_SKIPPED++)) || true
 }
 
 separator() {
@@ -110,7 +110,7 @@ check_ports_available() {
     separator "Setting up Port Forwarding"
     
     log_info "Cleaning up existing port-forward processes..."
-    pkill -f "kubectl port-forward" 2>/dev/null || true
+    pkill -f "kubectl port-forward" 2>/dev/null || :
     sleep 1
     
     log_info "Establishing port-forwards..."
@@ -522,13 +522,5 @@ main() {
     fi
 }
 
-# Trap to clean up port-forwards on exit
-cleanup() {
-    log_info "Cleaning up port-forward processes..."
-    pkill -f "kubectl port-forward" 2>/dev/null || true
-}
-
-trap cleanup EXIT
-git stash pop
 # Run main function
 main
