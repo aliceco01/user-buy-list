@@ -529,6 +529,6 @@ cleanup() {
 }
 
 trap cleanup EXIT
-
+git stash pop
 # Run main function
 main
