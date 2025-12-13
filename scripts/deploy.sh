@@ -4,6 +4,13 @@ set -e
 echo "=== Deploying User Buy List System ==="
 echo ""
 
+# Check if Docker is installed and running
+if ! docker info &> /dev/null; then
+    echo "Error: Docker is not running"
+    echo "Please start Docker Desktop and try again"
+    exit 1
+fi
+
 # Check if  minikube is installed
 if ! command -v minikube &> /dev/null; then
     echo "Error: minikube is not installed"
