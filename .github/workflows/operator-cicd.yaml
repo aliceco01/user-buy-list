@@ -1,0 +1,50 @@
+name: Operator CI/CD
+
+on:
+  push:
+    branches: [operator-approach]
+    paths:
+      - 'operator/**'
+      - '.github/workflows/operator-cicd.yaml'
+  pull_request:
+    branches: [operator-approach]
+    paths:
+      - 'operator/**'
+
+env:
+  REGISTRY: ghcr.io
+  OPERATOR_IMAGE: ghcr.io/${{ github.repository }}/operator
+
+jobs:
+  build-operator:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push operator image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./operator
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ env.OPERATOR_IMAGE }}:${{ github.sha }}
+
+      - name: Generate deployment manifest
+        if: github.event_name == 'push'
+        run: |
+          cd operator/manifests
+          kustomize edit set image OPERATOR_IMAGE=${{ env.OPERATOR_IMAGE }}:${{ github.sha }}
+          kustomize build . > /tmp/operator-manifest.yaml
+          echo "::notice::Operator manifest generated with image tag ${{ github.sha }}"
+

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: userbuylist-operator
+  labels:
+    app: userbuylist-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: userbuylist-operator
+  template:
+    metadata:
+      labels:
+        app: userbuylist-operator
+    spec:
+      serviceAccountName: userbuylist-operator
+      containers:
+        - name: operator
+          image: OPERATOR_IMAGE
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          env:
+            - name: WATCH_NAMESPACE
+              value: ""  # empty = watch all namespaces

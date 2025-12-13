@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - crd.yaml
+  - rbac.yaml
+  - deployment.yaml
+
+images:
+  - name: OPERATOR_IMAGE
+    newName: ghcr.io/aliceco01/user-buy-list/operator
+    # newTag is set dynamically via: kustomize edit set image OPERATOR_IMAGE=ghcr.io/aliceco01/user-buy-list/operator:SHA

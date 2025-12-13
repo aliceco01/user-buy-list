@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: userbuylist-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: userbuylist-operator
+rules:
+  # Watch for our CRD
+  - apiGroups: ["userbuys.example.com"]
+    resources: ["userbuyslists", "userbuyslists/status"]
+    verbs: ["*"]
+  # Create/manage deployments, services, configmaps, secrets
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["*"]
+  - apiGroups: [""]
+    resources: ["services", "configmaps", "secrets", "persistentvolumeclaims", "serviceaccounts"]
+    verbs: ["*"]
+  # Autoscaling
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["*"]
+  # KEDA
+  - apiGroups: ["keda.sh"]
+    resources: ["scaledobjects"]
+    verbs: ["*"]
+  # PDBs
+  - apiGroups: ["policy"]
+    resources: ["poddisruptionbudgets"]
+    verbs: ["*"]
+  # Events (for kopf)
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  # Pods (for status)
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: userbuylist-operator
+subjects:
+  - kind: ServiceAccount
+    name: userbuylist-operator
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: userbuylist-operator
+  apiGroup: rbac.authorization.k8s.io

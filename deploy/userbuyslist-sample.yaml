@@ -1,0 +1,14 @@
+apiVersion: userbuys.example.com/v1
+kind: UserBuyList
+metadata:
+  name: my-app
+  namespace: default
+spec:
+  replicas:
+    frontend: 1
+    customerFacing: 2
+    customerManagement: 2
+  monitoring:
+    enabled: true
+  autoscaling:
+    enabled: true
