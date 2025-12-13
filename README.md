@@ -48,8 +48,10 @@ If the browser doesn't open automatically:
 
 ### Option 1: minikube service (recommended)
 
+```
 echo "Frontend is available at:"
 minikube service user-buy-frontend --url 
+```
 
 ### Option 2: Port forwarding
 ```
