@@ -14,12 +14,14 @@ app.use(express.json());
 // ============ PROMETHEUS METRICS SETUP ============
 client.collectDefaultMetrics();
 
+// Define custom metrics
 const httpRequestsTotal = new client.Counter({
   name: 'http_requests_total',
   help: 'Total HTTP requests',
   labelNames: ['method', 'route', 'status']
 });
 
+// Histogram for request durations
 const httpRequestDuration = new client.Histogram({
   name: 'http_request_duration_seconds',
   help: 'HTTP request duration in seconds',
@@ -27,22 +29,26 @@ const httpRequestDuration = new client.Histogram({
   buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
 });
 
+// Gauge for in-flight requests
 const httpRequestsInFlight = new client.Gauge({
   name: 'http_requests_in_flight',
   help: 'Number of HTTP requests currently being processed'
 });
 
+// Kafka processing metrics
 const kafkaMessagesProcessed = new client.Counter({
   name: 'kafka_messages_processed_total',
   help: 'Total Kafka messages processed'
 });
 
+// Histogram for Kafka message processing duration
 const kafkaMessageProcessingDuration = new client.Histogram({
   name: 'kafka_message_processing_seconds',
   help: 'Kafka message processing duration',
   buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5]
 });
 
+// Gauge for Kafka messages in queue
 const kafkaMessagesInQueue = new client.Gauge({
   name: 'kafka_messages_in_queue',
   help: 'Number of Kafka messages currently being processed (work queue depth)'
@@ -55,6 +61,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   httpRequestsInFlight.inc();
   const start = Date.now();
   
+  // When response finishes, record metrics
   res.on('finish', () => {
     httpRequestsInFlight.dec();
     const duration = (Date.now() - start) / 1000;
@@ -73,7 +80,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/purcha
 const PURCHASE_TOPIC = process.env.PURCHASE_TOPIC || 'purchases';
 const KAFKA_GROUP_ID = process.env.KAFKA_GROUP_ID || 'purchase-group';
 
-// Purchase interface
+// Purchase interface 
 interface IPurchase {
   username: string;
   userid: string;
@@ -104,7 +111,10 @@ let mongoReady = false;
 // Connect to MongoDB
 async function connectMongo(): Promise<void> {
   try {
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,  // 5s to find MongoDB server
+      socketTimeoutMS: 45000            // 45s for individual operations (queries)
+    });
     mongoReady = true;
     console.log('Connected to MongoDB');
   } catch (err) {
@@ -129,7 +139,7 @@ async function startKafkaConsumer(): Promise<void> {
 
         kafkaMessagesInQueue.inc();
         const msgStart = Date.now();
-
+// Process the purchase message 
         try {
           const purchase = JSON.parse(message.value.toString()) as IPurchase;
           const newPurchase = new Purchase(purchase);
@@ -137,6 +147,9 @@ async function startKafkaConsumer(): Promise<void> {
           console.log('Purchase saved to MongoDB');
           kafkaMessagesProcessed.inc();
         } catch (err) {
+          // error handling for purchase message processing - KNOWN LIMITATION: Error is not re-thrown, so KafkaJS commits the offset
+          // even on failure. This means failed messages are lost, not retried. In a real-life system,
+          // would implement a dlq or retry mechanism.
           console.error('Failed to process incoming purchase message:', err);
         } finally {
           kafkaMessagesInQueue.dec();
