@@ -1,0 +1,4 @@
+apiVersion: v2
+name: user-buy-list
+version: 1.0.0
+description: User Buy List application
