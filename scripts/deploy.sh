@@ -21,7 +21,7 @@ fi
 # Start minikube if not running
 if ! minikube status 2>&1 | grep -q "Running"; then
     echo "Starting minikube..."
-    minikube start --memory=4096 --cpus=2
+    minikube start --memory=3584 --cpus=2
 fi
 
 # Check if kubectl is installed and can connect to cluster
