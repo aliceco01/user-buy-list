@@ -1,5 +1,3 @@
-# this pipeline updates manifests with SHA, commit back to repo. 
-# directly back to the repository's main branch. view README.md for details and rationale.
 name: CI/CD
 
 on:
@@ -29,7 +27,11 @@ jobs:
       - name: Install dependencies
         working-directory: ./services/customer-facing
         run: yarn install --frozen-lockfile
-        
+
+      - name: Run unit tests
+        working-directory: ./services/customer-facing
+        run: yarn test --ci --coverage
+
       - name: Build TypeScript
         working-directory: ./services/customer-facing
         run: yarn build
@@ -65,7 +67,11 @@ jobs:
       - name: Install dependencies
         working-directory: ./services/customer-management
         run: yarn install --frozen-lockfile
-        
+
+      - name: Run unit tests
+        working-directory: ./services/customer-management
+        run: yarn test --ci --coverage
+
       - name: Build TypeScript
         working-directory: ./services/customer-management
         run: yarn build
