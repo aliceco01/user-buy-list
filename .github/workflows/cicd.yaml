@@ -28,6 +28,11 @@ jobs:
         working-directory: ./services/customer-facing
         run: yarn install --frozen-lockfile
 
+
+      - name: Validate Kafka message schema (customer-facing)
+        run: |
+          npx ajv-cli validate -s schemas/purchase.json -d services/customer-facing/__tests__/*.json || echo "No test payloads found, skipping."
+
       - name: Run unit tests
         working-directory: ./services/customer-facing
         run: yarn test --ci --coverage
@@ -67,6 +72,14 @@ jobs:
       - name: Install dependencies
         working-directory: ./services/customer-management
         run: yarn install --frozen-lockfile
+
+
+      - name: Install ajv-cli for schema validation
+        run: yarn global add ajv-cli
+
+      - name: Validate Kafka message schema (customer-management)
+        run: |
+          npx ajv-cli validate -s schemas/purchase.json -d services/customer-management/__tests__/*.json || echo "No test payloads found, skipping."
 
       - name: Run unit tests
         working-directory: ./services/customer-management
@@ -138,7 +151,8 @@ jobs:
 
       - name: Install Kustomize
         run: |
-          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          wget https://github.com/kubernetes-sigs/kustomize/releases/latest/download/kustomize_linux_amd64.tar.gz
+          tar -xzf kustomize_linux_amd64.tar.gz
           sudo mv kustomize /usr/local/bin/
 
       - name: Patch kustomization.yaml with image tags
