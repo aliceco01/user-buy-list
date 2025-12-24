@@ -112,10 +112,14 @@ app.post('/buy', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString()
     };
 
-    // Send purchase to Kafka
+    // Send purchase to Kafka asynchronously, using userid as the key for partitioning
+    // NOTE: The Kafka topic should be created with multiple partitions to ensure key-based partitioning works.
     await producer.send({
       topic: PURCHASE_TOPIC,
-      messages: [{ value: JSON.stringify(purchase) }]
+      messages: [{
+        key: userid, // ensures all purchases for a user go to the same partition
+        value: JSON.stringify(purchase)
+      }]
     });
 
     // Increment Kafka messages metric
@@ -141,10 +145,19 @@ app.get('/getAllUserBuys/:userid', async (req: Request, res: Response) => {
   }
 });
 
-// Health check endpoint for Kafka readiness
+
+// Liveness probe: returns 200 if process is alive (no dependency checks)
 app.get('/health', (_req: Request, res: Response) => {
-  const status = kafkaReady ? 200 : 503;
-  res.status(status).json({ status: kafkaReady ? 'ok' : 'unhealthy', kafkaReady });
+  res.status(200).json({ status: 'alive' });
+});
+
+// Readiness probe: returns 200 only if Kafka is connected
+app.get('/ready', (_req: Request, res: Response) => {
+  if (kafkaReady) {
+    res.status(200).json({ status: 'ready', kafkaReady: true });
+  } else {
+    res.status(503).json({ status: 'not ready', kafkaReady: false });
+  }
 });
 
 

@@ -1,0 +1,12 @@
+resources:
+  - customer-facing.yaml
+  - customer-management.yaml
+  - frontend.yaml
+
+images:
+  - name: ghcr.io/aliceco01/user-buy-list/customer-facing
+    newTag: REPLACE_WITH_SHA
+  - name: ghcr.io/aliceco01/user-buy-list/customer-management
+    newTag: REPLACE_WITH_SHA
+  - name: ghcr.io/aliceco01/user-buy-list/user-buy-frontend
+    newTag: REPLACE_WITH_SHA
