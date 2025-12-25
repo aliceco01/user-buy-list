@@ -3,6 +3,7 @@ name: CI/CD
 on:
   push:
     branches: [main]
+  workflow_dispatch:
   pull_request:
     branches: [main]
 
@@ -27,6 +28,10 @@ jobs:
       - name: Install dependencies
         working-directory: ./services/customer-facing
         run: yarn install --frozen-lockfile
+
+        - name: Security scan (yarn audit)
+          working-directory: ./services/customer-facing
+          run: yarn audit || echo "yarn audit found vulnerabilities"
 
 
       - name: Validate Kafka message schema (customer-facing)
@@ -56,6 +61,14 @@ jobs:
           docker build -t ${IMAGE}:${{ github.sha }} .
           docker push ${IMAGE}:${{ github.sha }}
 
+        - name: Security scan (Trivy)
+          uses: aquasecurity/trivy-action@v0.14.0
+          with:
+            image-ref: ghcr.io/aliceco01/user-buy-list/customer-facing:${{ github.sha }}
+            format: table
+            exit-code: 0
+            ignore-unfixed: true
+
   build-and-push-customer-management:
     runs-on: ubuntu-latest
     permissions:
@@ -72,6 +85,10 @@ jobs:
       - name: Install dependencies
         working-directory: ./services/customer-management
         run: yarn install --frozen-lockfile
+
+        - name: Security scan (yarn audit)
+          working-directory: ./services/customer-management
+          run: yarn audit || echo "yarn audit found vulnerabilities"
 
 
       - name: Install ajv-cli for schema validation
@@ -104,6 +121,14 @@ jobs:
           docker build -t ${IMAGE}:${{ github.sha }} .
           docker push ${IMAGE}:${{ github.sha }}
 
+        - name: Security scan (Trivy)
+          uses: aquasecurity/trivy-action@v0.14.0
+          with:
+            image-ref: ghcr.io/aliceco01/user-buy-list/customer-management:${{ github.sha }}
+            format: table
+            exit-code: 0
+            ignore-unfixed: true
+
   build-and-push-frontend:
     runs-on: ubuntu-latest
     permissions:
@@ -121,6 +146,10 @@ jobs:
         working-directory: ./frontend
         run: yarn install --frozen-lockfile
 
+        - name: Security scan (yarn audit)
+          working-directory: ./frontend
+          run: yarn audit || echo "yarn audit found vulnerabilities"
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -135,6 +164,14 @@ jobs:
           IMAGE=${{ env.REGISTRY }}/${{ github.repository }}/user-buy-frontend
           docker build -t ${IMAGE}:${{ github.sha }} .
           docker push ${IMAGE}:${{ github.sha }}
+
+        - name: Security scan (Trivy)
+          uses: aquasecurity/trivy-action@v0.14.0
+          with:
+            image-ref: ghcr.io/aliceco01/user-buy-list/user-buy-frontend:${{ github.sha }}
+            format: table
+            exit-code: 0
+            ignore-unfixed: true
 
   deploy:
     name: Deploy to Kubernetes
