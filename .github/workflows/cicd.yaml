@@ -10,7 +10,6 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_TAG: ${{ github.sha }}
-  TRIVY_ACTION_VERSION: 0.33.1
 
 jobs:
   build-and-push-customer-facing:
@@ -63,7 +62,7 @@ jobs:
           docker push ${IMAGE}:${{ github.sha }}
 
       - name: Security scan (Trivy)
-        uses: aquasecurity/trivy-action@${{ env.TRIVY_ACTION_VERSION }}
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: ghcr.io/aliceco01/user-buy-list/customer-facing:${{ github.sha }}
           format: table
@@ -123,7 +122,7 @@ jobs:
           docker push ${IMAGE}:${{ github.sha }}
 
       - name: Security scan (Trivy)
-        uses: aquasecurity/trivy-action@${{ env.TRIVY_ACTION_VERSION }}
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: ghcr.io/aliceco01/user-buy-list/customer-management:${{ github.sha }}
           format: table
@@ -167,7 +166,7 @@ jobs:
           docker push ${IMAGE}:${{ github.sha }}
 
       - name: Security scan (Trivy)
-        uses: aquasecurity/trivy-action@${{ env.TRIVY_ACTION_VERSION }}
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: ghcr.io/aliceco01/user-buy-list/user-buy-frontend:${{ github.sha }}
           format: table
