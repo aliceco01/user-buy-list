@@ -91,11 +91,6 @@ jobs:
         if: ${{ matrix.dir != 'frontend' }}
         run: yarn build
 
-      - name: Build frontend
-        working-directory: ${{ matrix.dir }}
-        if: ${{ matrix.dir == 'frontend' }}
-        run: yarn build
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
