@@ -22,8 +22,14 @@ app.use('/api', createProxyMiddleware({
   }
 }));
 
-// Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve built static files from Vite output
+const staticDir = path.join(__dirname, 'dist');
+app.use(express.static(staticDir));
+
+// Fallback to index.html for SPA-style routing
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(staticDir, 'index.html'));
+});
 
 app.listen(PORT, () => {
   console.log(`Frontend listening on port ${PORT}`);
