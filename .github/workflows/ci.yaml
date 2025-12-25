@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-services:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - name: customer-facing
+            dir: services/customer-facing
+            schema: schemas/purchase.json
+            testPayloads: services/customer-facing/__tests__/*.json
+          - name: customer-management
+            dir: services/customer-management
+            schema: schemas/purchase.json
+            testPayloads: services/customer-management/__tests__/*.json
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        working-directory: ${{ matrix.service.dir }}
+        run: yarn install --frozen-lockfile
+      - name: Security scan (yarn audit, fail on high)
+        working-directory: ${{ matrix.service.dir }}
+        run: |
+          yarn audit --groups dependencies --level high
+      - name: Validate Kafka message schema (fail if missing or invalid)
+        run: |
+          npx ajv-cli validate -s ${{ matrix.service.schema }} -d ${{ matrix.service.testPayloads }}
+      - name: Run unit tests
+        working-directory: ${{ matrix.service.dir }}
+        run: yarn test --ci --coverage
+      - name: Build TypeScript
+        working-directory: ${{ matrix.service.dir }}
+        run: yarn build
+  verify-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: yarn install --frozen-lockfile
+      - name: Security scan (yarn audit, fail on high)
+        working-directory: ./frontend
+        run: |
+          yarn audit --groups dependencies --level high
+      - name: Build frontend
+        working-directory: ./frontend
+        run: yarn build

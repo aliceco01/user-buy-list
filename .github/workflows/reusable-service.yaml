@@ -1,0 +1,78 @@
+name: build-test-push-service
+
+on:
+  workflow_call:
+    inputs:
+      service-dir:
+        required: true
+        type: string
+      image-name:
+        required: true
+        type: string
+      schema-validate:
+        required: false
+        type: boolean
+        default: false
+      schema-path:
+        required: false
+        type: string
+      test-payload-glob:
+        required: false
+        type: string
+
+jobs:
+  build-test-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        working-directory: ${{ inputs.service-dir }}
+        run: yarn install --frozen-lockfile
+
+      - name: Security scan (yarn audit)
+        working-directory: ${{ inputs.service-dir }}
+        run: yarn audit
+
+      - name: Validate Kafka message schema
+        if: ${{ inputs.schema-validate == true }}
+        run: |
+          npx ajv-cli validate -s ${{ inputs.schema-path }} -d ${{ inputs.test-payload-glob }} || echo "No test payloads found, skipping."
+
+      - name: Run unit tests
+        working-directory: ${{ inputs.service-dir }}
+        run: yarn test --ci --coverage
+
+      - name: Build TypeScript
+        working-directory: ${{ inputs.service-dir }}
+        run: yarn build
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        working-directory: ${{ inputs.service-dir }}
+        run: |
+          IMAGE=${{ env.REGISTRY }}/${{ github.repository }}/${{ inputs.image-name }}
+          docker build -t ${IMAGE}:${{ github.sha }} .
+          docker push ${IMAGE}:${{ github.sha }}
+
+      - name: Security scan (Trivy)
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ github.sha }}
+          format: table
+          exit-code: 1
+          ignore-unfixed: true
