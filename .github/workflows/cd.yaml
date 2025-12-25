@@ -154,9 +154,10 @@ jobs:
       - name: Security scan with Trivy
         id: trivy-scan
         run: |
-          trivy image --format json --output trivy-results.json --severity HIGH,CRITICAL --no-progress ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}:${{ env.IMAGE_TAG }} || true
+          JSON_OUT="trivy-results-${{ matrix.image }}.json"
+          trivy image --format json --output "$JSON_OUT" --severity HIGH,CRITICAL --no-progress ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}:${{ env.IMAGE_TAG }} || true
           
-          if [ ! -f trivy-results.json ]; then
+          if [ ! -f "$JSON_OUT" ]; then
             echo "Trivy scan failed, skipping policy enforcement"
             exit 0
           fi
@@ -164,8 +165,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq
           
-          CRITICAL_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' trivy-results.json 2>/dev/null || echo "0")
-          HIGH_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' trivy-results.json 2>/dev/null || echo "0")
+          CRITICAL_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' "$JSON_OUT" 2>/dev/null || echo "0")
+          HIGH_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' "$JSON_OUT" 2>/dev/null || echo "0")
           
           echo "Critical vulnerabilities: $CRITICAL_COUNT"
           echo "High vulnerabilities: $HIGH_COUNT"
@@ -187,12 +188,14 @@ jobs:
 
       - name: Generate Trivy SARIF report
         run: |
-          trivy image --format sarif --output trivy-results.sarif --severity HIGH,CRITICAL --no-progress ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}:${{ env.IMAGE_TAG }} || true
+          SARIF_OUT="trivy-results-${{ matrix.image }}.sarif"
+          trivy image --format sarif --output "$SARIF_OUT" --severity HIGH,CRITICAL --no-progress ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}:${{ env.IMAGE_TAG }} || true
+          echo "SARIF_OUT=$SARIF_OUT" >> $GITHUB_ENV
 
       - name: Upload Trivy results
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: trivy-results.sarif
+          sarif_file: ${{ env.SARIF_OUT || format('trivy-results-{0}.sarif', matrix.image) }}
         continue-on-error: true
 
       - name: Install cosign
