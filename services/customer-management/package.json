@@ -2,6 +2,7 @@
   "name": "customer-management",
   "version": "1.0.0",
   "description": "Customer management API",
+  "license": "UNLICENSED",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

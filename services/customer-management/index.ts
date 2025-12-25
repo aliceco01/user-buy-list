@@ -202,16 +202,19 @@ app.get('/metrics', async (_req: Request, res: Response) => {
 });
 
 // ============ SERVER START ============
-const server = app.listen(PORT, async () => {
-  console.log(`Customer-management service running on port ${PORT}`);
-  await connectMongo();
-  await startKafkaConsumer();
-});
+let server: ReturnType<typeof app.listen> | undefined;
+if (process.env.NODE_ENV !== 'test') {
+  server = app.listen(PORT, async () => {
+    console.log(`Customer-management service running on port ${PORT}`);
+    await connectMongo();
+    await startKafkaConsumer();
+  });
+}
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('Shutting down customer-management service');
   await consumer.disconnect().catch(() => {});
   await mongoose.disconnect().catch(() => {});
-  server.close(() => process.exit(0));
+  server?.close(() => process.exit(0));
 });

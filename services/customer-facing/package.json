@@ -2,6 +2,7 @@
   "name": "customer-facing",
   "version": "1.0.0",
   "description": "Customer facing web server",
+  "license": "UNLICENSED",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

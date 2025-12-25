@@ -2,6 +2,7 @@
   "name": "user-buy-list-frontend",
   "version": "1.0.0",
   "private": true,
+  "license": "UNLICENSED",
   "scripts": {
     "start": "node server.js",
     "dev": "vite",
