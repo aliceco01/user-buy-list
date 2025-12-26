@@ -147,9 +147,9 @@ jobs:
           sbom: true
 
       - name: Install Trivy
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/setup-trivy@v0.14.0
         with:
-          trivy_version: latest
+          version: latest
 
       - name: Security scan with Trivy
         id: trivy-scan
