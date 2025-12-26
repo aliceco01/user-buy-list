@@ -147,9 +147,13 @@ jobs:
           sbom: true
 
       - name: Install Trivy
-        uses: aquasecurity/setup-trivy@v0.14.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           version: latest
+          scan-type: image
+          image-ref: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}:${{ env.IMAGE_TAG }}
+          format: table
+          exit-code: '0'
 
       - name: Security scan with Trivy
         id: trivy-scan
